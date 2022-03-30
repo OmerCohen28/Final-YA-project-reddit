@@ -1,6 +1,6 @@
-from thread import thread
+from chatroom.chatroom import *
 
-th = thread("omer",['gay'],4,["fuck"],['omer'])
+th = chatroom("omer",['gay'],4,["fuck"],['omer'])
 
 th.admins_list.append("omer")
 

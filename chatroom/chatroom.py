@@ -1,5 +1,5 @@
 import time
-class thread:
+class chatroom:
 
     def __init__(self,creator:str, topcis:list[str],room_id:int, banned_words:list[str], members:list[str]):
         self.creator = creator
