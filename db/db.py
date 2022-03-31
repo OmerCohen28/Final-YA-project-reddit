@@ -1,5 +1,6 @@
 import redis
 import pickle
+from FinalProject.user.user import User
 from chatroom.chatroom import *
 from user.user import *
 class db:

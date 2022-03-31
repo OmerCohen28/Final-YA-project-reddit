@@ -20,6 +20,4 @@ class chatroom:
 
     def make_admin(self,user:str) ->None:
         self.admins_list.append(user)
-    
-    
-
+        

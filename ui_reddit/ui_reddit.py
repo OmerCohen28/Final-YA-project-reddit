@@ -1,5 +1,6 @@
 from tkinter import *
 
+#To Do - display Images in chatroom!!!
 
 class ui_reddit:
 
