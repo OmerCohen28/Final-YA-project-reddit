@@ -1,7 +1,7 @@
 import time
 class chatroom:
 
-    def __init__(self,creator:str, topcis:list[str],room_id:int, banned_words:list[str], members:list[str]):
+    def __init__(self,creator:str, topcis:list[str],room_id:int, banned_words:list[str], members:list[str]) ->None:
         self.creator = creator
         self.topcis = topcis
         self.admins_list = []
@@ -18,7 +18,7 @@ class chatroom:
     def add_user(self,user:str):
         pass
 
-    def make_admin(self,user:str):
+    def make_admin(self,user:str) ->None:
         self.admins_list.append(user)
     
     

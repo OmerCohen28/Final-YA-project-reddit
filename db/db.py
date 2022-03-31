@@ -1,30 +1,31 @@
 import redis
 import pickle
+from chatroom.chatroom import *
+from user.user import *
 class db:
 
-    def __init__(self,r:redis.Redis):
-        self.r = r
+    def __init__(self) -> None:
+        self.r = redis.Redis()
 
-    def insert_user(self,name:str,user):
+    def insert_user(self,name:str,user) ->bool:
         return self.r.set(name,pickle.dumps(user))
 
-    def delete_user(self,name:str):
+    def delete_user(self,name:str) ->bool:
         return self.r.delete(name)
     
-    def get_user(self,name:str):
+    def get_user(self,name:str) ->User/str:
         try:
             return pickle.loads(self.r.get(name))
         except TypeError:
             return "key didn't have a value"
 
-    def insert_chat(self,id_num:int,chatroom):
-        pass
+    def insert_chat(self,id_num:int,chat :chatroom) ->bool:
+        return self.r.set(str(id_num),pickle.dumps(chat))
 
-r = redis.Redis()
-db_r = db(r)
-print('started')
-print(db_r.insert_user('benny','yakub'))
-print(db_r.get_user('benny'))
-print(db_r.insert_user('benny','yaya'))
-print(db_r.delete_user('benny'))
-print(db_r.get_user('benny'))
+    def get_chat(self,id_num:int) ->chatroom/str:
+        try:
+            return pickle.loads(self.r.get(id_num))
+        except TypeError:
+            return "key didn't have a velue"
+
+
