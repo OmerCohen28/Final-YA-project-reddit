@@ -1,2 +1,10 @@
+urgent - 
+    -now that the UI is up, need to set up the connection between server and client 
+     and start controling the traffic there.
+
+
+need to do-
+    -add actual logic to signup, signin, continue as guest
+
 not urgent -
-    add an icon to the app
+    -add an icon to the app
