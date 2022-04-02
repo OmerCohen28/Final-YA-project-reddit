@@ -1,7 +1,9 @@
 import time
+from user.user import User
+from user import *
 class chatroom:
 
-    def __init__(self,creator:str, topcis:list[str],room_id:int, banned_words:list[str], members:list[str]) ->None:
+    def __init__(self,creator:User, topcis:list[str],room_id:int, banned_words:list[str], members:list[User]) ->None:
         self.creator = creator
         self.topcis = topcis
         self.admins_list = []
@@ -11,13 +13,21 @@ class chatroom:
         self.common_words = []
         self.banned_words = banned_words
 
-    def kick(self,user:str):
-        pass  
+    def kick(self,user:User) ->bool:
+        try:
+            del self.members[self.members.index(user)]
+            return True
+        except:
+            return False
 
 
     def add_user(self,user:str):
-        pass
+        try:
+            self.members.append(user)
+            return True
+        except:
+            return False
 
     def make_admin(self,user:str) ->None:
         self.admins_list.append(user)
-        
+

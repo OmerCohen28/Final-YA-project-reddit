@@ -5,7 +5,7 @@ from db.db import *
 import pickle
 class User():
 
-    def __init__(self,name:str,password:str,ip_addr:str,is_sys_admin:bool,sock:socket) ->None:
+    def __init__(self,name:str,id_num:int,password:str,ip_addr:str,is_sys_admin:bool,sock:socket) ->None:
         self.joined_room = []
         self.admin_in = []
         self.name = name
@@ -13,6 +13,7 @@ class User():
         self.ip_addr = ip_addr
         self.is_sys_admin = is_sys_admin
         self.sock = sock
+        self.id_num = id_num
     
     @classmethod
     def from_ip(cls,ip_addr:str,sock:socket) -> 'User':
