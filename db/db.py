@@ -7,15 +7,15 @@ class db:
     def __init__(self) -> None:
         self.r = redis.Redis()
 
-    def insert_user(self,name:str,user) ->bool:
-        return self.r.set(name,pickle.dumps(user))
+    def insert_user(self,user:User) ->bool:
+        return self.r.set(str(user.id_num),pickle.dumps(user))
 
-    def delete_user(self,name:str) ->bool:
-        return self.r.delete(name)
+    def delete_user(self,id_num:str) ->bool:
+        return self.r.delete(id_num)
     
-    def get_user(self,name:str) ->User/str:
+    def get_user(self,id_num:str) ->User/str:
         try:
-            return pickle.loads(self.r.get(name))
+            return pickle.loads(self.r.get(str(id_num)))
         except TypeError:
             return "key didn't have a value"
 

@@ -21,7 +21,7 @@ class chatroom:
             return False
 
 
-    def add_user(self,user:str):
+    def add_user(self,user:str) ->bool:
         try:
             self.members.append(user)
             return True
@@ -30,4 +30,5 @@ class chatroom:
 
     def make_admin(self,user:str) ->None:
         self.admins_list.append(user)
+
 
