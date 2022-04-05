@@ -4,7 +4,7 @@ from chatroom.chatroom import chatroom
 from user.user import User
 class db:
 
-    def __init__(self) -> None:
+    def __init__(self):
         self.r = redis.Redis()
 
     def insert_user(self,user:User) ->bool:

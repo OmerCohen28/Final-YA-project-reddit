@@ -3,7 +3,7 @@ from user.user import User
 from user import *
 class chatroom:
 
-    def __init__(self,creator:User, topcis:list[str],room_id:int, banned_words:list[str], members:list[User]) ->None:
+    def __init__(self,creator:User, topcis:list[str],room_id:int, banned_words:list[str], members:list[User]):
         self.creator = creator
         self.topcis = topcis
         self.admins_list = []

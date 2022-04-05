@@ -3,18 +3,14 @@ from db.db import *
 from socket import *
 from chatroom.chatroom import *
 
-db_conn = db()
+sock = socket(AF_INET,SOCK_STREAM)
+sock.bind(("",50001))
 
-use = User("omer",'123','123',True,socket())
+sock.connect("",50000)
 
-chat = chatroom('omer',['nothing'],1234,['fuck'],['me'])
+msgs = ["new user","omer","1234","20",False]
 
-db_conn.insert_chat(chat.room_id,chat)
-
-chat_2 = db_conn.get_chat(1234)
-
-print(chat_2.room_id)
-
-use.join_room(1234,db_conn)
-
-print(use.joined_room[0].creator)
+for msg in msgs:
+    sock.send(msg.encode())
+    lol = pickle.loads(sock.recv(1054))
+    print(lol)

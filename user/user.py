@@ -1,11 +1,11 @@
 from socket import *
-from FinalProject.db.db import db
+from db.db import db
 from chatroom.chatroom import *
 from db.db import *
 import pickle
 class User():
 
-    def __init__(self,name:str,id_num:int,password:str,ip_addr:str,is_sys_admin:bool,sock:socket) ->None:
+    def __init__(self,name:str,id_num:int,password:str,ip_addr:str,is_sys_admin:bool,sock:socket):
         self.joined_room = []
         self.admin_in = []
         self.name = name

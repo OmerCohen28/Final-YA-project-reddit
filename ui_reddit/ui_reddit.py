@@ -2,11 +2,12 @@ from tkinter import *
 import PIL
 from PIL import ImageTk
 import pickle
+import os
 #To Do - display Images in chatroom!!!
 
 class ui_reddit:
 
-    def __init__(self,root:Tk) ->None:
+    def __init__(self,root:Tk):
         self.root = root
         self.root.title("Reddit Clone")
 
@@ -87,12 +88,12 @@ class ui_reddit:
 
 
     def make_log_in_button(self,frame)->Button:
-        self.login_img = PhotoImage(file="login.png")
+        self.login_img = PhotoImage(file=("login.png"))
         login_btn = Button(frame,image=self.login_img,command=self.Do,borderwidth=0)
         return login_btn
 
     def make_sign_up_button(self,frame)->Button:
-        self.signup_img = PhotoImage(file="signup.png")
+        self.signup_img = PhotoImage(file=os.path.abspath("signup.png"))
         signup_btn = Button(frame,image=self.signup_img,command=self.Do,borderwidth=0)
         return signup_btn
 
