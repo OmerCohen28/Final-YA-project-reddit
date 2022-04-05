@@ -13,7 +13,7 @@ class db:
     def delete_user(self,id_num:str) ->bool:
         return self.r.delete(id_num)
     
-    def get_user(self,id_num:str) ->User/str:
+    def get_user(self,id_num:str) ->User:
         try:
             return pickle.loads(self.r.get(str(id_num)))
         except TypeError:
@@ -22,7 +22,7 @@ class db:
     def insert_chat(self,id_num:int,chat :chatroom) ->bool:
         return self.r.set(str(id_num),pickle.dumps(chat))
 
-    def get_chat(self,id_num:int) ->chatroom/str:
+    def get_chat(self,id_num:int) ->chatroom:
         try:
             return pickle.loads(self.r.get(id_num))
         except TypeError:

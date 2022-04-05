@@ -1,7 +1,4 @@
 from socket import *
-from db.db import db
-from chatroom.chatroom import *
-from db.db import *
 import pickle
 class User():
 
@@ -19,8 +16,6 @@ class User():
     def from_ip(cls,ip_addr:str,sock:socket) -> 'User':
         return cls('tmp','tmp',ip_addr,False,sock)
 
-    def join_room(self,chatroom_id:int,db_conn:db) -> None:
-        self.joined_room.append(db_conn.get_chat(chatroom_id))
 
     
 
