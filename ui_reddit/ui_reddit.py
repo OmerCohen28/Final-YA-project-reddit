@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import font
+from tkinter import messagebox
 import PIL
 from PIL import ImageTk
 import pickle
@@ -42,12 +43,12 @@ class ui_reddit:
 
         #left frame
         self.pic = PhotoImage(file='logo.png')
-        lbl = Label(left_frame,image=self.pic,borderwidth=0)
+        btn = Button(left_frame,image=self.pic,borderwidth=0,command=self.easter_egg)
 
         msg1 = Label(left_frame,text="Welcome to the coolest reddit clone",font=("arial",15,font.BOLD),bg="#6666ff",fg="white")
         msg2 = Label(left_frame,text="you will find on the internet!",font=("arial",15,font.BOLD),bg="#6666ff",fg="white")
 
-        lbl.pack(pady=40)
+        btn.pack(pady=20)
         msg1.pack(pady=5)
         msg2.pack(pady=3)
 
@@ -109,6 +110,9 @@ class ui_reddit:
 
     def Do(self):
         pass
+
+    def easter_egg(self):
+        messagebox.showinfo(title="easter egg!",message="Wow you discoverd an easter egg. This is Rick Sanchez from the great TV show Rick and Morty")
 
 
     def make_log_in_button(self,frame)->Button:
