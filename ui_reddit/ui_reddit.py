@@ -42,8 +42,12 @@ class ui_reddit:
         left_frame = Frame(self.root,bg ="#9966ff")
         right_frame = Frame(self.root)
 
-        pic = PhotoImage(file='logo.png')
-        lbl = Label(left_frame,image=pic)
+
+        #self.img = ImageTk.PhotoImage(PIL.Image.open('logo.png'))
+        #img_lbl = Label(self.root,image=self.img,borderwidth=0)
+        self.pic = PhotoImage(file='logo.png')
+        lbl = Label(left_frame,image=self.pic)
+        self.root.wm_attributes('-transparentcolor','white')
         lbl.pack()
 
         right_frame.pack(side=RIGHT,expand=TRUE,fill=BOTH)
