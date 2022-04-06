@@ -9,13 +9,9 @@ class server:
                     # to keep track of the current id between all instances
     curr_user_id=0 #same thing for users
 
-    def __init__(self,conn_sock:socket,all_sockets:list[socket],sock_user_dict:dict[socket:User],user_sock_dict:dict[User:socket],db_conn:db):
-        self.conn_sock = socket(AF_INET,SOCK_STREAM)
-        self.conn_sock.bind(("localhost",50000))
-        self.conn_sock.listen(5)
-        self.all_sockets = [conn_sock]
-        self.sock_user_dict = sock_user_dict
-        self.user_sock_dict = user_sock_dict
+    def __init__(self,conn_sock:socket,all_sockets:list[socket],db_conn:db):
+        self.conn_sock = conn_sock
+        self.all_sockets = all_sockets
         self.db_conn = db_conn
 
 
@@ -23,11 +19,9 @@ class server:
     This function is the main function that should be used to create new users, it updates the user id 
     variable and add the user to the database. If None is returned, it means there has been an eror
     '''
-    def create_new_user(self,name:str,password:str,ip_addr:str,is_sys_admin:bool,sock:socket) ->User:
-        user = User(name,self.curr_user_id,password,ip_addr,is_sys_admin,sock)
+    def create_new_user(self,name:str,password:str,ip_addr:str,is_sys_admin:bool) ->User:
+        user = User(name,self.curr_user_id,password,ip_addr,is_sys_admin)
         if(self.add_user_to_db(user)):
-            self.sock_user_dict[sock] = User
-            self.user_sock_dict[User] = sock
             self.curr_user_ip+=1
             return user
         return None
@@ -37,10 +31,8 @@ class server:
     list content:  name(str), password(str),ip_addr(str), is_sys_admin(bool),sock(socket)
     '''
     def create_new_user_from_lst(self,info:list)->User:
-        user = User(info[0],self.curr_user_id,info[1],info[2],info[3],info[4])
+        user = User(info[0],self.curr_user_id,info[1],info[2],info[3])
         if(self.add_user_to_db(user)):
-            self.sock_user_dict[info[4]] = User
-            self.user_sock_dict[User] = info[4]
             self.curr_user_id+=1
             return user
         return None
@@ -68,33 +60,35 @@ class server:
 
     #main receving function
     def recv_msgs(self):
+        print(self.all_sockets)
         while True:
             lst = self.all_sockets
             read,write,eror = select(lst,[],[],0)
-            print(read)
             for sockobj in read:
                 if sockobj==self.conn_sock:
-                    client_sock = self.conn_sock.accept()
+                    client_sock,address = self.conn_sock.accept()
                     self.all_sockets.append(client_sock)
                 else:
-                    msg = sockobj.recv(1054).decode()
+                    msg = pickle.loads(sockobj.recv(1054))
                     if(msg=='new user'):
-                        self.get_new_user_data()
+                        self.get_new_user_data(sockobj)
 
     '''
     expected input : name(str),password(str),ip_addr(str), is_sys_admin(bool))
     expected output: None
     '''
     def get_new_user_data(self,sock:socket) ->None:
-        sock.send('waiting for data'.encode())
-        msg = sock.recv(1054).decode()
+        sock.send(pickle.dumps('waiting for data'))
+        msg = pickle.loads(sock.recv(1054))
+        user_info=[]
         while msg!='done':
-            user_info = [msg]
-            sock.send('ok'.encode())
-            msg = sock.recv(1054).decode()
-        user_info.append(sock)
+            user_info.append(msg)
+            sock.send(pickle.dumps('ok'))
+            msg = pickle.loads(sock.recv(1054))
+        print(user_info)
         user = self.create_new_user_from_lst(user_info)
-        sock.send(pickle.loads(user))
+        print(user)
+        sock.send(pickle.dumps(user))
         
         
 

@@ -4,7 +4,6 @@ from PIL import ImageTk
 from PIL import Image
 #Define the tkinter instance
 win= Tk()
-win.title="Reddit Clone"
 win.title("Rounded Button")
 
 #Define the size of the tkinter frame

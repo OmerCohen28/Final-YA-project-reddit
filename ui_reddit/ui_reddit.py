@@ -1,4 +1,6 @@
+from telnetlib import EXOPL
 from tkinter import *
+from turtle import bgcolor
 import PIL
 from PIL import ImageTk
 import pickle
@@ -36,38 +38,17 @@ class ui_reddit:
     def log_in_screen(self):
         self.clear_screen()
         self.root.geometry("600x420")
-        frame_btn = Frame(self.root)
-        frame_entry1 = Frame(self.root)
-        frame_entry2 = Frame(self.root)
 
-        welcome_lbl = Label(self.root, text="Welcome to the coolest reddit clone you will find on the internet!",font=("Arial",15))
+        left_frame = Frame(self.root,bg ="#9966ff")
+        right_frame = Frame(self.root)
 
-        login_btn = self.make_log_in_button(frame_btn)
-        signup_btn = self.make_sign_up_button(frame_btn)
-        guest_btn = Button(frame_btn,text="Continue As a Guess",command=self.Do,font=("Arial",11))
+        pic = PhotoImage(file='logo.png')
+        lbl = Label(left_frame,image=pic)
+        lbl.pack()
 
-        self.img = ImageTk.PhotoImage(PIL.Image.open('logo.png'))
-        img_lbl = Label(self.root,image=self.img,borderwidth=0)
+        right_frame.pack(side=RIGHT,expand=TRUE,fill=BOTH)
+        left_frame.pack(side=LEFT,expand=TRUE,fill=BOTH)
 
-        name_entry_var = StringVar()
-        password_entry_var = StringVar()
-        name_entry = Entry(frame_entry1,textvariable=name_entry_var,font=("Arial",15))
-        password_entry = Entry(frame_entry2,textvariable=password_entry_var,font=("Arial",15))
-        name_lbl = Label(frame_entry1,text="Username:",font=("Arial",15))
-        password_lbl = Label(frame_entry2,text="Password:",font=("Arial",15))
-
-        welcome_lbl.pack(pady=5)
-        img_lbl.pack()
-        name_lbl.pack(side=LEFT)
-        name_entry.pack(side=LEFT)
-        password_lbl.pack(side=LEFT)
-        password_entry.pack(side=LEFT)
-        login_btn.pack(side=LEFT,anchor=N,padx=7)
-        signup_btn.pack(side=LEFT,anchor=N,padx=7)
-        guest_btn.pack(side=LEFT,padx=7)
-        frame_entry1.pack()
-        frame_entry2.pack(pady=5)
-        frame_btn.pack()
 
 
     #shows the listbox of the chat + some other fetures
@@ -99,9 +80,6 @@ class ui_reddit:
 
 
 rot = Tk()
-
 ui = ui_reddit(rot)
-
 ui.log_in_screen()
-
 rot.mainloop()
