@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter import font
 import PIL
 from PIL import ImageTk
 import pickle
@@ -35,49 +36,62 @@ class ui_reddit:
     #log-in screen for poeple to sign in/log-in as guests
     def log_in_screen(self):
         self.clear_screen()
-        self.root.geometry("600x420")
-        frame_btn = Frame(self.root)
-        frame_entry1 = Frame(self.root)
-        frame_entry2 = Frame(self.root)
+        self.root.geometry("800x450")
+        left_frame = Frame(self.root,bg="#6666ff")
+        right_frame = Frame(self.root,bg="white")
 
-        welcome_lbl = Label(self.root, text="Welcome to the coolest reddit clone you will find on the internet!",font=("Arial",15))
-
-<<<<<<< HEAD
-
-        #self.img = ImageTk.PhotoImage(PIL.Image.open('logo.png'))
-        #img_lbl = Label(self.root,image=self.img,borderwidth=0)
+        #left frame
         self.pic = PhotoImage(file='logo.png')
-        lbl = Label(left_frame,image=self.pic)
-        self.root.wm_attributes('-transparentcolor','white')
-        lbl.pack()
-=======
-        login_btn = self.make_log_in_button(frame_btn)
-        signup_btn = self.make_sign_up_button(frame_btn)
-        guest_btn = Button(frame_btn,text="Continue As a Guess",command=self.Do,font=("Arial",11))
->>>>>>> parent of 617c280 (still needs to be changed)
+        lbl = Label(left_frame,image=self.pic,borderwidth=0)
 
-        self.img = ImageTk.PhotoImage(PIL.Image.open('logo.png'))
-        img_lbl = Label(self.root,image=self.img,borderwidth=0)
+        msg1 = Label(left_frame,text="Welcome to the coolest reddit clone",font=("arial",15,font.BOLD),bg="#6666ff",fg="white")
+        msg2 = Label(left_frame,text="you will find on the internet!",font=("arial",15,font.BOLD),bg="#6666ff",fg="white")
 
-        name_entry_var = StringVar()
-        password_entry_var = StringVar()
-        name_entry = Entry(frame_entry1,textvariable=name_entry_var,font=("Arial",15))
-        password_entry = Entry(frame_entry2,textvariable=password_entry_var,font=("Arial",15))
-        name_lbl = Label(frame_entry1,text="Username:",font=("Arial",15))
-        password_lbl = Label(frame_entry2,text="Password:",font=("Arial",15))
+        lbl.pack(pady=40)
+        msg1.pack(pady=5)
+        msg2.pack(pady=3)
 
-        welcome_lbl.pack(pady=5)
-        img_lbl.pack()
-        name_lbl.pack(side=LEFT)
-        name_entry.pack(side=LEFT)
-        password_lbl.pack(side=LEFT)
-        password_entry.pack(side=LEFT)
-        login_btn.pack(side=LEFT,anchor=N,padx=7)
-        signup_btn.pack(side=LEFT,anchor=N,padx=7)
-        guest_btn.pack(side=LEFT,padx=7)
-        frame_entry1.pack()
-        frame_entry2.pack(pady=5)
-        frame_btn.pack()
+        #right frame
+
+        #lbl_frame
+        lbl_frame = Frame(right_frame,bg="white")
+        space_lbl = Label(lbl_frame,bg="white")
+        space_lbl2 = Label(lbl_frame,bg="white")
+        sign_up = Label(lbl_frame,text="Sign Up",font=("arial",25),bg="white")
+        name_lbl = Label(lbl_frame,text="Username:",font=("Arial",15),bg="white")
+        name_entry = Entry(lbl_frame,font=("Arial",15))
+        password_lbl = Label(lbl_frame,text="Password:",font=("Arial",15),bg="white")
+        password_entry = Entry(lbl_frame,font=("Arial",15))
+
+        sign_up.grid(column=0,row=0)
+        space_lbl2.grid(column=0,row=1)
+        space_lbl.grid(column=0,row=3)
+        name_lbl.grid(column=0,row=2)
+        name_entry.grid(column=1,row=2)
+        password_lbl.grid(column=0,row=4)
+        password_entry.grid(column=1,row=4)
+
+        #buttons_frame
+        button_frame = Frame(right_frame,bg="white")
+        help_frame = Frame(button_frame)
+        sign_up_btn = Button(button_frame,text="Sign Up",bg="#6666ff",fg="white",command=self.Do,font=("Arial",15),width=30,height=1)
+        msg_lbl = Label(button_frame,text="Already have an account?",font=("Arial",10),bg="white")
+        log_in_btn = Button(button_frame,text="Log in",bg="white",fg="#6666ff",font=("Arial",10,font.BOLD),borderwidth=0)
+        continue_as_a_guest_btn = Button(right_frame,text="Or continue as a guest",font=("Arial",10,font.BOLD),bg="white",fg="#6666ff",borderwidth=0)
+
+        sign_up_btn.pack()
+        msg_lbl.pack(side=LEFT,pady=10)
+        log_in_btn.pack(side=LEFT,pady=10)
+        help_frame.pack(side=BOTTOM)
+
+        lbl_frame.pack(pady=50)
+        button_frame.pack()
+        continue_as_a_guest_btn.pack(anchor=W,padx=30)
+
+
+        left_frame.pack(side=LEFT,expand=TRUE,fill=BOTH)
+        right_frame.pack(side=RIGHT,expand=TRUE,fill=BOTH)
+
 
 
     #shows the listbox of the chat + some other fetures
