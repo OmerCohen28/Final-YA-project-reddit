@@ -12,10 +12,6 @@ msgs = ["new user","omer","1234","20",False]
 
 for msg in msgs:
     print("loop")
-    sock.send(pickle.dumps(msg))
-    print('sent')
+    sock.send(msg.encode())
     lol = pickle.loads(sock.recv(1054))
     print(lol)
-sock.send(pickle.dumps('done'))
-use = pickle.loads(sock.recv(1054))
-print(use)
