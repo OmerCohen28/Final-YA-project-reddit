@@ -11,6 +11,9 @@ class User():
         self.is_sys_admin = is_sys_admin
         self.id_num = id_num
     
+    def __str__(self):
+        return f"name: {self.name}, id: {self.id_num}, ip: {self.ip_addr}"
+    
     @classmethod
     def from_ip(cls,ip_addr:str,sock:socket) -> 'User':
         return cls('tmp','tmp',ip_addr,False,sock)
