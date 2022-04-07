@@ -12,5 +12,5 @@ conn_sock.bind(("localhost",50002))
 conn_sock.listen(5)
 lst = []
 lst.append(conn_sock)
-server = server(conn_sock,lst,{},{},db_conn)
-server.recv_msgs()
+sr = server(conn_sock,lst,db_conn)
+sr.recv_msgs()
