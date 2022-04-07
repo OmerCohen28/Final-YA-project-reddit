@@ -4,14 +4,15 @@ from tkinter import messagebox
 import PIL
 from PIL import ImageTk
 import pickle
-import os
-#To Do - display Images in chatroom!!!
+from user_controller import user_controller
+
 
 class ui_reddit:
 
     def __init__(self,root:Tk):
         self.root = root
         self.root.title("Reddit Clone")
+        self.user_controller = user_controller()
 
     #clear the screen
     def clear_screen(self) ->None:
@@ -60,22 +61,22 @@ class ui_reddit:
         space_lbl2 = Label(lbl_frame,bg="white")
         sign_up = Label(lbl_frame,text="Sign Up",font=("arial",25),bg="white")
         name_lbl = Label(lbl_frame,text="Username:",font=("Arial",15),bg="white")
-        name_entry = Entry(lbl_frame,font=("Arial",15))
+        self.name_entry = Entry(lbl_frame,font=("Arial",15))
         password_lbl = Label(lbl_frame,text="Password:",font=("Arial",15),bg="white")
-        password_entry = Entry(lbl_frame,font=("Arial",15))
+        self.password_entry = Entry(lbl_frame,font=("Arial",15))
 
         sign_up.grid(column=0,row=0)
         space_lbl2.grid(column=0,row=1)
         space_lbl.grid(column=0,row=3)
         name_lbl.grid(column=0,row=2)
-        name_entry.grid(column=1,row=2)
+        self.name_entry.grid(column=1,row=2)
         password_lbl.grid(column=0,row=4)
-        password_entry.grid(column=1,row=4)
+        self.password_entry.grid(column=1,row=4)
 
         #buttons_frame
         button_frame = Frame(right_frame,bg="white")
         help_frame = Frame(button_frame)
-        sign_up_btn = Button(button_frame,text="Sign Up",bg="#6666ff",fg="white",command=self.Do,font=("Arial",15),width=30,height=1)
+        sign_up_btn = Button(button_frame,text="Sign Up",bg="#6666ff",fg="white",command=self.send_sign_up_info,font=("Arial",15),width=30,height=1)
         msg_lbl = Label(button_frame,text="Already have an account?",font=("Arial",10),bg="white")
         log_in_btn = Button(button_frame,text="Log in",bg="white",fg="#6666ff",font=("Arial",10,font.BOLD),borderwidth=0)
         continue_as_a_guest_btn = Button(right_frame,text="Or continue as a guest",font=("Arial",10,font.BOLD),bg="white",fg="#6666ff",borderwidth=0)
@@ -111,19 +112,12 @@ class ui_reddit:
     def Do(self):
         pass
 
+    def send_sign_up_info(self):
+        print(self.user_controller.sign_up(self.name_entry.get(),self.password_entry.get(),False))
+
     def easter_egg(self):
         messagebox.showinfo(title="easter egg!",message="Wow you discoverd an easter egg. This is Rick Sanchez from the great TV show Rick and Morty")
 
-
-    def make_log_in_button(self,frame)->Button:
-        self.login_img = PhotoImage(file=("login.png"))
-        login_btn = Button(frame,image=self.login_img,command=self.Do,borderwidth=0)
-        return login_btn
-
-    def make_sign_up_button(self,frame)->Button:
-        self.signup_img = PhotoImage(file=os.path.abspath("signup.png"))
-        signup_btn = Button(frame,image=self.signup_img,command=self.Do,borderwidth=0)
-        return signup_btn
 
 
 rot = Tk()
