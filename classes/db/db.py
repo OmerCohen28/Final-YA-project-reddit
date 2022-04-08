@@ -8,14 +8,18 @@ class db:
         self.r = redis.Redis()
 
     def insert_user(self,user:User) ->bool:
-        return self.r.set(str(user.id_num),pickle.dumps(user))
+        if self.get_user(user.name) == "key didn't have a value":
+            print("in")
+            return self.r.set(str(user.name),pickle.dumps(user))
+        else:
+            return False
 
-    def delete_user(self,id_num:str) ->bool:
-        return self.r.delete(id_num)
+    def delete_user(self,name:str) ->bool:
+        return self.r.delete(name)
     
-    def get_user(self,id_num:str) ->User:
+    def get_user(self,name:str) ->User:
         try:
-            return pickle.loads(self.r.get(str(id_num)))
+            return pickle.loads(self.r.get(str(name)))
         except TypeError:
             return "key didn't have a value"
 

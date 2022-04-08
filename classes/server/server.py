@@ -7,7 +7,6 @@ import pickle
 class server:
     curr_chat_ip =0 #since the server gives the chat id, i created a class variable
                     # to keep track of the current id between all instances
-    curr_user_id=0 #same thing for users
 
     def __init__(self,db_conn:db):
         self.conn_sock = socket(AF_INET,SOCK_STREAM)
@@ -17,27 +16,26 @@ class server:
         self.db_conn = db_conn
 
 
+
     '''
     This function is the main function that should be used to create new users, it updates the user id 
     variable and add the user to the database. If None is returned, it means there has been an eror
     '''
-    def create_new_user(self,name:str,password:str,ip_addr:str,is_sys_admin:bool) ->User:
-        user = User(name,self.curr_user_id,password,ip_addr,is_sys_admin)
+    def create_new_user(self,name:str,password:str,is_sys_admin:bool) ->bool:
+        user = User(name,password,is_sys_admin)
         if(self.add_user_to_db(user)):
-            self.curr_user_ip+=1
-            return user
-        return None
+            return True
+        return False
 
     '''
     alternative function that recevies a list with all the data and creates the new user
-    list content:  name(str), password(str),ip_addr(str), is_sys_admin(bool),sock(socket)
+    list content:  name(str), password(str), is_sys_admin(bool)
     '''
-    def create_new_user_from_lst(self,info:list)->User:
-        user = User(info[0],self.curr_user_id,info[1],info[2],info[3])
+    def create_new_user_from_lst(self,info:list)->bool:
+        user = User(info[0],info[1],info[2])
         if(self.add_user_to_db(user)):
-            self.curr_user_id+=1
-            return user
-        return None
+            return True
+        return False
 
     
     '''
@@ -46,7 +44,7 @@ class server:
     def add_user_to_db(self,user:User)->bool:
         return self.db_conn.insert_user(user)
 
-    def get_user_by_id(self,id_num:int)-> User:
+    def get_user_by_name(self,id_num:int)-> User:
         user = self.db_conn.get_user(id_num)
         if user is User:
             return user
@@ -67,21 +65,24 @@ class server:
             read,write,eror = select(lst,[],[],0)
             for sockobj in read:
                 if sockobj==self.conn_sock:
-                    print("hi")
                     client_sock,address = self.conn_sock.accept()
                     self.all_sockets.append(client_sock)
                 else:
-                    msg = pickle.loads(sockobj.recv(1054))
-                    print('message')
+                    msg = sockobj.recv(1054)
+                    if not msg:
+                        sockobj.close()
+                        continue
+                    msg = pickle.loads(msg)
                     if(msg=='new user'):
                         self.get_new_user_data(sockobj)
+                    if(msg=="log in"):
+                        self.check_log_in(sockobj)
 
     '''
-    expected input : name(str),password(str),ip_addr(str), is_sys_admin(bool))
+    expected input : name(str),password(str), is_sys_admin(bool))
     expected output: None
     '''
     def get_new_user_data(self,sock:socket) ->None:
-        print('here')
         sock.send(pickle.dumps('waiting for data'))
         msg = pickle.loads(sock.recv(1054))
         user_info = []
@@ -89,10 +90,28 @@ class server:
             user_info.append(msg)
             sock.send(pickle.dumps('ok'))
             msg = pickle.loads(sock.recv(1054))
-        print(user_info)
-        user = self.create_new_user_from_lst(user_info)
-        print(user)
-        sock.send(pickle.dumps(user))
+        is_ok = self.create_new_user_from_lst(user_info)
+        sock.send(pickle.dumps(is_ok))
+    
+    def check_log_in(self,sock:socket) -> None:
+        name = ""
+        password = ""
+        sock.send(pickle.dumps("waiting for data"))
+        name = pickle.loads(sock.recv(1054))
+        sock.send(pickle.dumps('ok'))
+        password = pickle.loads(sock.recv(1054))
+        sock.send(pickle.dumps('ok'))
+        end = pickle.loads(sock.recv(1054))
+        if(end=="done"):
+            check = self.db_conn.get_user(name)
+            if(check=="key didn't have a value"):
+                sock.send(pickle.dumps(("no username","")))
+                return
+            if(password == check.password):
+                sock.send(pickle.dumps(('ok',check)))
+            sock.send(pickle.dumps(("password is inccorect","")))
+
+        
         
         
 

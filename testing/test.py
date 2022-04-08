@@ -1,20 +1,11 @@
-from user.user import *
-from db.db import *
-from socket import *
-from chatroom.chatroom import *
+from tkinter import *
 
-sock = socket(AF_INET,SOCK_STREAM)
-sock.bind(("localhost",50001))
+master = Tk()
 
-sock.connect(("localhost",50000))
+variable = StringVar(master)
+variable.set("one") # default value
 
-msgs = ["new user","omer","1234","20",False]
+w = OptionMenu(master, variable, "one", "two", "three")
+w.pack()
 
-for msg in msgs:
-    print("loop")
-    sock.send(pickle.dumps(msg))
-    print('sent')
-    lol = pickle.loads(sock.recv(1054))
-    print(lol)
-sock.send(pickle.dumps('done'))
-use = pickle.loads(sock.recv(1054))
+mainloop()
