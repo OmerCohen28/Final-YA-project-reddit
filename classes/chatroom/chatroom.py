@@ -1,5 +1,5 @@
 import time
-from user.user import User
+from classes.user.user import User
 
 class chatroom:
 

@@ -1,7 +1,7 @@
 import redis
 import pickle
-from chatroom.chatroom import chatroom
-from user.user import User
+from classes.chatroom.chatroom import chatroom
+from classes.user.user import User
 class db:
 
     def __init__(self):

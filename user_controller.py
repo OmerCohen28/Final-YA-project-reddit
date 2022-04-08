@@ -1,14 +1,14 @@
 import sys
 from socket import *
 import pickle
-from user.user import User
+from classes.user.user import User
 class user_controller:
     def __init__(self):
         self.sock = socket(AF_INET,SOCK_STREAM)
         port = user_controller.get_open_port()
-        self.sock.bind(("127.0.0.1",port))
+        self.sock.bind(("localhost",port))
         print(port)
-        self.sock.connect(("127.0.0.1",50000))
+        self.sock.connect(("localhost",50000))
 
     def sign_up(self,name,password,is_sys_admin):
         #if there is a problem with the IP recognition it lies here

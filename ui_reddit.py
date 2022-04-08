@@ -6,7 +6,6 @@ from PIL import ImageTk
 import pickle
 from user_controller import user_controller
 
-
 class ui_reddit:
 
     def __init__(self,root:Tk):

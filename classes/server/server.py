@@ -1,6 +1,6 @@
 from socket import *
-from user.user import User
-from db.db import db
+from classes.user.user import User
+from classes.db.db import db
 from select import select
 import pickle
 
@@ -9,7 +9,7 @@ class server:
                     # to keep track of the current id between all instances
     curr_user_id=0 #same thing for users
 
-    def __init__(self,conn_sock:socket,all_sockets:list[socket],db_conn:db):
+    def __init__(self,db_conn:db):
         self.conn_sock = socket(AF_INET,SOCK_STREAM)
         self.conn_sock.bind(("localhost",50000))
         self.conn_sock.listen(5)
