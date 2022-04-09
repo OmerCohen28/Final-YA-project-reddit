@@ -1,16 +1,12 @@
-from string import whitespace
 from tkinter import *
 from tkinter import font
 from tkinter import messagebox
 import PIL
 from PIL import ImageTk
 import pickle
-
-from regex import FULLCASE
 from classes.chatroom.chatroom import chatroom
 from classes.message.message import message
 from classes.user.user import User
-import click
 from user_controller import user_controller
 import time
 class ui_reddit:
@@ -64,6 +60,10 @@ class ui_reddit:
         time_lbl = Label(self.root,text =msg.time_str,font=("Arial",12))
         title_lbl = Label(self.root,text=msg.title,font=("Arial",15,font.BOLD))
 
+        self.test = PhotoImage(file="logo.png")
+        lbl = Label(self.root,image=self.test)
+        lbl.pack()
+
  
     '''
     main functions - 
@@ -88,10 +88,24 @@ class ui_reddit:
         top_frame.pack(side=TOP,fill=X)
 
 
-        frame_lst = self.make_frame_chat_list(lst)
+        main_frame = Frame(self.root)
+        canvas = Canvas(main_frame)
+        scroll_bar = Scrollbar(main_frame,orient=VERTICAL,command=canvas.yview)
+        canvas.configure(yscrollcommand=scroll_bar.set)
+        canvas.bind("<Configure>",lambda event: canvas.configure(scrollregion=canvas.bbox("all")))
+        second_frame = Frame(canvas)
+        canvas.create_window((0,0),window=second_frame,anchor=NW)
+
+
+        scroll_bar.pack(side=RIGHT,fill=Y)
+        canvas.pack(fill=BOTH,expand=TRUE)
+        main_frame.pack(fill=BOTH,expand=TRUE)
+
+        frame_lst = self.make_frame_chat_list(lst,second_frame)
 
         for frame in frame_lst:
             frame.pack(fill=X,pady=10)
+
 
 
         
@@ -279,7 +293,7 @@ class ui_reddit:
     def user_options(self,event):
         pass
 
-    def make_frame_chat_list(self,lst:list[message]) ->list[Frame]:
+    def make_frame_chat_list(self,lst:list[message],container_frame:Frame) ->list[Frame]:
         result = []
         self.expand_img = PhotoImage(file="maximize.png")
         count =0
@@ -289,7 +303,7 @@ class ui_reddit:
             else:
                 color = "#9999ff"
 
-            frame = Frame(self.root,bg = color,highlightbackground="black", highlightthickness=2)
+            frame = Frame(container_frame,bg = color,highlightbackground="black", highlightthickness=2)
             send_by_lbl = Label(frame,text = f"user: {msg.sent_by}",font=("Arial",12),bg = color)
             time_lbl = Label(frame,text = msg.time_str,font=("Arial",12),bg = color)
             sent_in_btn = Button(frame,text = msg.sent_in.name, font=("Arial",12,font.ITALIC,font.BOLD),borderwidth=0,bg = color)
@@ -311,6 +325,7 @@ class ui_reddit:
 
             if msg.img_name!="no":
                 try:
+                    print(msg.img_name)
                     print("yop")
                     self.chat_img_lst.append(PhotoImage(file=msg.img_name))
                     img_lbl = Label(frame,image=self.chat_img_lst[self.chat_img_lst_index],bg = color)
@@ -318,11 +333,11 @@ class ui_reddit:
                     self.chat_img_lst_index+=1                 
                 except:
                     print("sup")
-                    space_lbl = Label(frame,height=4,text="sup sup",bg=color)
+                    space_lbl = Label(frame,height=4,text="",bg=color)
                     space_lbl.pack(pady=2,side=TOP)
             else:
                 print("hyue")
-                space_lbl = Label(frame,height=4,text="sup sup",bg=color)
+                space_lbl = Label(frame,height=4,text="",bg=color)
                 space_lbl.pack(pady=2,side=TOP)
             count+=1
             result.append(frame)

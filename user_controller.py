@@ -68,7 +68,7 @@ use = User("ayal","123",False)
 chat = chatroom(use,"Omer's WonderLand",[],1,[],[])                    
 
 msg1 = message("omer",[],"wow this works!!",chat,"user.png","Please work")
-msg2 = message("itai",[],"Pleeeeeeeeeeeeeeeeeeeeeeeeeaaaaaaaaaaaaaaaaaaasssssssssssssssseeeeeeeeeeeeeeeeeeeee",chat,"no","holy fuck please")
+msg2 = message("itai",[],"Pleeeeeeeeeeeeeeeeeeeeeeeeeaaaaaaaaaaaaaaaaaaasssssssssssssssseeeeeeeeeeeeeeeeeeeee",chat,"cat.jpg","holy fuck please")
 msg3 = message("elad",[],"testing",chat,"logo.png","testing")
 msg4 = message("benny",[],"Will This Appear??",chat,"no","Will you see me?")
 msgs = [msg1,msg2,msg3,msg4]
