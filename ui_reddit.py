@@ -1,21 +1,31 @@
+from string import whitespace
 from tkinter import *
 from tkinter import font
 from tkinter import messagebox
 import PIL
 from PIL import ImageTk
 import pickle
+
+from regex import FULLCASE
+from classes.chatroom.chatroom import chatroom
+from classes.message.message import message
+from classes.user.user import User
+import click
 from user_controller import user_controller
 import time
-
 class ui_reddit:
 
     def __init__(self,root:Tk):
         self.root = root
         self.root.protocol("WM_DELETE_WINDOW",self.handle_close)
         self.root.title("Reddit Clone")
+        self.root.resizable(False,False)
         self.user_controller = user_controller()
+        self.chat_img_lst = []
+        self.chat_img_lst_index=0
 
-    #clear the screen
+    #general purpose functions
+
     def clear_screen(self) ->None:
         for widget in self.root.winfo_children():
             widget.destroy()
@@ -25,6 +35,36 @@ class ui_reddit:
         messagebox.showinfo(message="Thanks for being here")
         self.root.destroy()
 
+    def create_top_frame(self):
+        frame = Frame(self.root,bg="#6666ff")
+
+        lbl = Label(frame,text = "Reddit Clone",font=("Arial",15),bg="#6666ff",fg="white")
+        self.logo_img = PhotoImage(file='reddit-logo.png')
+        menu_btn = Button(frame,image=self.logo_img,borderwidth=0,bg="#6666ff",command=self.main_menu_screen)
+        user_drop_down = self.user_drop_down(frame)
+        self.search_bar = Entry(frame,font=("Arial",15),bg="#9999ff",fg = "white")
+        self.search_bar.config(width=30)
+
+        menu_btn.pack(side=LEFT,padx=10)
+        lbl.pack(side=LEFT,padx=10)
+        self.search_bar.pack(side=LEFT,padx=100)
+        user_drop_down.pack(side=LEFT,padx=10)
+        return frame
+
+    def expand_message(self,msg:message):
+        self.clear_screen()
+        color = "#6666ff"
+        self.root.config(bg=color)
+        top_frame = self.create_top_frame()
+        top_frame.config(height=350)
+        top_frame.pack(side=TOP,fill=X)
+
+        sent_in_btn = Button(self.root,text = msg.sent_in.name, font=("Arial",12,font.ITALIC,font.BOLD),borderwidth=0,bg = color,fg="white")
+        sent_by_lbl = Label(self.root,text = msg.sent_by,font=("Arial",12),bg=color,fg="white")
+        time_lbl = Label(self.root,text =msg.time_str,font=("Arial",12))
+        title_lbl = Label(self.root,text=msg.title,font=("Arial",15,font.BOLD))
+
+ 
     '''
     main functions - 
     - main_menu_screen()
@@ -39,16 +79,32 @@ class ui_reddit:
     #screen that shows chat_rooms you've joined, if you haven't joined any it'll suggest you to join some
     #also shows some user and social info, have to think what
     def main_menu_screen(self):
+        lst = self.user_controller.get_msgs_for_main_menu()
         self.clear_screen()
-        lbl = Label(self.root,text=self.user.name)
-        lbl.pack()
+        self.root.geometry("940x800")
+        self.root.config(bg="#6666ff")
+        top_frame = self.create_top_frame()
+        top_frame.config(height=350)
+        top_frame.pack(side=TOP,fill=X)
+
+
+        frame_lst = self.make_frame_chat_list(lst)
+
+        for frame in frame_lst:
+            frame.pack(fill=X,pady=10)
+
+
+        
+        
+        
+        
 
 
     '''
     the next following functions are almost identical, this way you can just back and forth in the signup/login without much
     ui change, i wouldn't want to make a new ui for login/signup i think they should be the same
     '''
-    #log-in screen for poeple to sign in/log-in as guests
+    #log-in screen 
     def log_in_screen(self):
         self.clear_screen()
         self.root.geometry("800x450")
@@ -210,10 +266,74 @@ class ui_reddit:
     def change_to_signup(self):
         self.sign_up_screen()
 
+
+    #main menu screen functin groups
+    def user_drop_down(self,frame):
+        clicked = StringVar()
+        options = ["Options","User Info","Change User Settings","Window Settings"]
+        clicked.set(options[0])
+        drop_down = OptionMenu(frame,clicked,*options,command=self.user_options)   
+        drop_down.config(bg="#6666ff",fg="white")
+        return drop_down
+
+    def user_options(self,event):
+        pass
+
+    def make_frame_chat_list(self,lst:list[message]) ->list[Frame]:
+        result = []
+        self.expand_img = PhotoImage(file="maximize.png")
+        count =0
+        for msg in lst:
+            if count % 2 == 0:
+                color ="#6699ff"
+            else:
+                color = "#9999ff"
+
+            frame = Frame(self.root,bg = color,highlightbackground="black", highlightthickness=2)
+            send_by_lbl = Label(frame,text = f"user: {msg.sent_by}",font=("Arial",12),bg = color)
+            time_lbl = Label(frame,text = msg.time_str,font=("Arial",12),bg = color)
+            sent_in_btn = Button(frame,text = msg.sent_in.name, font=("Arial",12,font.ITALIC,font.BOLD),borderwidth=0,bg = color)
+            title_lbl = Label(frame,text = msg.title,font=("arial",15,font.BOLD),bg = color)
+            if(len(msg.msg)>50):
+                actual_msg = msg.msg[:50] + "..."
+            else:
+                actual_msg = msg.msg
+            msg_lbl = Label(frame,text = actual_msg,font=("Arial",12),bg = color,height=3)
+            expand_btn = Button(frame,image=self.expand_img,command=lambda: self.expand_message(msg),borderwidth=0,bg = color)
+
+            title_lbl.pack(side=TOP,anchor=E)
+            expand_btn.pack(side=LEFT,anchor=N,pady=5,padx=3)
+            sent_in_btn.pack(side=TOP,anchor=W,pady=5)
+            send_by_lbl.pack(side=TOP,anchor=W,pady=5,padx=3)
+            time_lbl.pack(side=TOP,anchor=W,pady=5,padx=3)
+            msg_lbl.pack(pady=10,side=LEFT,anchor=S)
+
+
+            if msg.img_name!="no":
+                try:
+                    print("yop")
+                    self.chat_img_lst.append(PhotoImage(file=msg.img_name))
+                    img_lbl = Label(frame,image=self.chat_img_lst[self.chat_img_lst_index],bg = color)
+                    img_lbl.pack(pady=5)
+                    self.chat_img_lst_index+=1                 
+                except:
+                    print("sup")
+                    space_lbl = Label(frame,height=4,text="sup sup",bg=color)
+                    space_lbl.pack(pady=2,side=TOP)
+            else:
+                print("hyue")
+                space_lbl = Label(frame,height=4,text="sup sup",bg=color)
+                space_lbl.pack(pady=2,side=TOP)
+            count+=1
+            result.append(frame)
+        return result
+
+
+
 rot = Tk()
 
 ui = ui_reddit(rot)
 
-ui.log_in_screen()
+ui.main_menu_screen()
 
 rot.mainloop()

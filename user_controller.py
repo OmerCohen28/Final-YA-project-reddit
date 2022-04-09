@@ -2,15 +2,22 @@ import sys
 from socket import *
 import pickle
 from classes.user.user import User
+from classes.chatroom.chatroom import chatroom
+from classes.message.message import message
 import random
 class user_controller:
     def __init__(self):
-        self.sock = socket(AF_INET,SOCK_STREAM)
-        port = user_controller.get_port()
-        self.sock.setsockopt(SOL_SOCKET,SO_REUSEADDR, True)
-        self.sock.bind(("localhost",port))
-        print(port)
-        self.sock.connect(("localhost",50000))
+        while True:
+            try:
+                self.sock = socket(AF_INET,SOCK_STREAM)
+                port = user_controller.get_port()
+                self.sock.setsockopt(SOL_SOCKET,SO_REUSEADDR, True)
+                self.sock.bind(("localhost",port))
+                print(port)
+                self.sock.connect(("localhost",50000))
+                break
+            except:
+                pass
 
     def close_sock(self):
         self.sock.close()
@@ -35,6 +42,9 @@ class user_controller:
         msg = pickle.loads(self.sock.recv(1054))
         return msg
 
+    def get_msgs_for_main_menu(self):
+        return msgs
+
     @staticmethod
     def get_open_port():
         start_port = 50002
@@ -52,3 +62,13 @@ class user_controller:
         rand_num = random.randint(10,30)
         if( starting_port+rand_num < 50500): return starting_port + rand_num
         return starting_port-rand_num
+
+use = User("ayal","123",False)
+
+chat = chatroom(use,"Omer's WonderLand",[],1,[],[])                    
+
+msg1 = message("omer",[],"wow this works!!",chat,"user.png","Please work")
+msg2 = message("itai",[],"Pleeeeeeeeeeeeeeeeeeeeeeeeeaaaaaaaaaaaaaaaaaaasssssssssssssssseeeeeeeeeeeeeeeeeeeee",chat,"no","holy fuck please")
+msg3 = message("elad",[],"testing",chat,"logo.png","testing")
+msg4 = message("benny",[],"Will This Appear??",chat,"no","Will you see me?")
+msgs = [msg1,msg2,msg3,msg4]

@@ -1,32 +1,25 @@
-#Import all the necessary libraries
-from tkinter import *
-from PIL import ImageTk
-from PIL import Image
-#Define the tkinter instance
-win= Tk()
-win.title="Reddit Clone"
-win.title("Rounded Button")
-
-#Define the size of the tkinter frame
-win.geometry("700x800")
-
-#Define the working of the button
-
-def my_command():
-   text.config(text= "You have clicked Me...")
-
-#Import the image using PhotoImage function
-click_btn= ImageTk.PhotoImage(Image.open("logo.png"))
-
-#Let us create a label for button event
-img_label= Label(image=click_btn)
-
-#Let us create a dummy button and pass the image
-button= Button(win, image=click_btn,command= my_command,
-borderwidth=0)
-button.pack(pady=30)
-
-text= Label(win, text= "")
-text.pack(pady=30)
-
-win.mainloop()
+import tkinter as tk
+import glob
+ 
+ 
+root = tk.Tk()
+root.geometry("400x400")
+def showimg(e):
+	n = lst.curselection()
+	fname = lst.get(n)
+	img = tk.PhotoImage(file=fname)
+	lab.config(image=img)
+	lab.image = img
+	print(fname)
+ 
+lst = tk.Listbox(root)
+lst.pack(side="left", fill=tk.Y, expand=1)
+namelist = [i for i in glob.glob("*png")]
+for fname in namelist:
+	lst.insert(tk.END, fname)
+lst.bind("<<ListboxSelect>>", showimg)
+img = tk.PhotoImage(file="Idle (5)_ltl.png")
+lab = tk.Label(root, text="hello", image=img)
+lab.pack(side="left")
+ 
+root.mainloop()

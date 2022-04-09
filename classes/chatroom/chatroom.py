@@ -3,8 +3,9 @@ from classes.user.user import User
 
 class chatroom:
 
-    def __init__(self,creator:User, topcis:list[str],room_id:int, banned_words:list[str], members:list[User]):
+    def __init__(self,creator:User,name:str, topcis:list[str],room_id:int, banned_words:list[str], members:list[User]):
         self.creator = creator
+        self.name = name
         self.topcis = topcis
         self.admins_list = []
         self.members = members

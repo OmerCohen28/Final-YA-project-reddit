@@ -7,7 +7,7 @@ import pickle
 class server:
     curr_chat_ip =0 #since the server gives the chat id, i created a class variable
                     # to keep track of the current id between all instances
-
+    chat_name_to_id_dict = {}
     def __init__(self,db_conn:db):
         self.conn_sock = socket(AF_INET,SOCK_STREAM)
         self.conn_sock.bind(("localhost",50000))
@@ -65,20 +65,27 @@ class server:
             lst = self.all_sockets
             read,write,eror = select(lst,[],[],0)
             for sockobj in read:
+                print("again")
                 if sockobj==self.conn_sock:
                     client_sock,address = self.conn_sock.accept()
                     self.all_sockets.append(client_sock)
                 else:
-                    msg = sockobj.recv(1054)
+                    try:
+                        msg = sockobj.recv(1054)
+                    except ConnectionResetError:
+                        del lst[lst.index(sockobj)]
+                        sockobj.close()
+                        continue    
                     if not msg:
                         del lst[lst.index(sockobj)]
                         sockobj.close()
-                        continue
+                        continue                   
                     msg = pickle.loads(msg)
                     if(msg=='new user'):
                         self.get_new_user_data(sockobj)
                     if(msg=="log in"):
                         self.check_log_in(sockobj)
+                        print('done')
 
     '''
     expected input : name(str),password(str), is_sys_admin(bool))
@@ -96,6 +103,7 @@ class server:
         sock.send(pickle.dumps(is_ok))
     
     def check_log_in(self,sock:socket) -> None:
+        print('in')
         name = ""
         password = ""
         sock.send(pickle.dumps("waiting for data"))

@@ -4,7 +4,7 @@ urgent -
 
 
 need to do-
-    -add actual logic to signup, signin, continue as guest
+    -add expand post to the main_menu posts and in_chat posts to open comment section etc
 
 not urgent -
     -add an icon to the app
