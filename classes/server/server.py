@@ -12,6 +12,7 @@ class server:
         self.conn_sock = socket(AF_INET,SOCK_STREAM)
         self.conn_sock.bind(("localhost",50000))
         self.conn_sock.listen(5)
+        self.conn_sock.setsockopt(SOL_SOCKET,SO_REUSEADDR, True)
         self.all_sockets = [self.conn_sock]
         self.db_conn = db_conn
 
@@ -70,6 +71,7 @@ class server:
                 else:
                     msg = sockobj.recv(1054)
                     if not msg:
+                        del lst[lst.index(sockobj)]
                         sockobj.close()
                         continue
                     msg = pickle.loads(msg)

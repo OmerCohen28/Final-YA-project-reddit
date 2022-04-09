@@ -2,10 +2,11 @@ import sys
 from socket import *
 import pickle
 from classes.user.user import User
+import random
 class user_controller:
     def __init__(self):
         self.sock = socket(AF_INET,SOCK_STREAM)
-        port = user_controller.get_open_port()
+        port = user_controller.get_port()
         self.sock.setsockopt(SOL_SOCKET,SO_REUSEADDR, True)
         self.sock.bind(("localhost",port))
         print(port)
@@ -44,4 +45,10 @@ class user_controller:
                 return i
             except:
                 pass
-
+    
+    @staticmethod
+    def get_port():
+        starting_port = user_controller.get_open_port()
+        rand_num = random.randint(10,30)
+        if( starting_port+rand_num < 50500): return starting_port + rand_num
+        return starting_port-rand_num

@@ -23,7 +23,6 @@ class ui_reddit:
     def handle_close(self):
         self.user_controller.close_sock()
         messagebox.showinfo(message="Thanks for being here")
-        time.sleep(2)
         self.root.destroy()
 
     '''
