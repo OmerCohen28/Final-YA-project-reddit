@@ -1,3 +1,5 @@
+from functools import partial
+from re import L
 from tkinter import *
 from tkinter import font
 from tkinter import messagebox
@@ -19,6 +21,8 @@ class ui_reddit:
         self.user_controller = user_controller()
         self.chat_img_lst = []
         self.chat_img_lst_index=0
+        self.expand_msg_img_lst = []
+        self.expand_msg_ing_lst_index=0
 
     #general purpose functions
 
@@ -32,37 +36,97 @@ class ui_reddit:
         self.root.destroy()
 
     def create_top_frame(self):
-        frame = Frame(self.root,bg="#6666ff")
+        frame = Frame(self.root,bg="#6699ff")
 
-        lbl = Label(frame,text = "Reddit Clone",font=("Arial",15),bg="#6666ff",fg="white")
+        lbl = Label(frame,text = "Reddit Clone",font=("Arial",15),bg="#6699ff",fg="white")
         self.logo_img = PhotoImage(file='reddit-logo.png')
-        menu_btn = Button(frame,image=self.logo_img,borderwidth=0,bg="#6666ff",command=self.main_menu_screen)
-        user_drop_down = self.user_drop_down(frame)
-        self.search_bar = Entry(frame,font=("Arial",15),bg="#9999ff",fg = "white")
+        menu_btn = Button(frame,image=self.logo_img,borderwidth=0,bg="#6699ff",command=self.main_menu_screen)
+        #user_drop_down = self.user_drop_down(frame)
+        self.search_bar = Entry(frame,font=("Arial",15),bg="#3399ff",fg = "white")
         self.search_bar.config(width=30)
 
         menu_btn.pack(side=LEFT,padx=10)
         lbl.pack(side=LEFT,padx=10)
         self.search_bar.pack(side=LEFT,padx=100)
-        user_drop_down.pack(side=LEFT,padx=10)
+        #user_drop_down.pack(side=LEFT,padx=10)
         return frame
 
     def expand_message(self,msg:message):
         self.clear_screen()
+        print("oedfjkpo")
         color = "#6666ff"
         self.root.config(bg=color)
         top_frame = self.create_top_frame()
         top_frame.config(height=350)
         top_frame.pack(side=TOP,fill=X)
 
-        sent_in_btn = Button(self.root,text = msg.sent_in.name, font=("Arial",12,font.ITALIC,font.BOLD),borderwidth=0,bg = color,fg="white")
-        sent_by_lbl = Label(self.root,text = msg.sent_by,font=("Arial",12),bg=color,fg="white")
-        time_lbl = Label(self.root,text =msg.time_str,font=("Arial",12))
-        title_lbl = Label(self.root,text=msg.title,font=("Arial",15,font.BOLD))
+        #creating scrolling comment section
+        main_frame = Frame(self.root,bg="#6666ff")
+        canvas = Canvas(main_frame,width="10",bg="#6666ff")
+        scroll_bar = Scrollbar(main_frame,orient=VERTICAL,command=canvas.yview)
+        canvas.configure(yscrollcommand=scroll_bar.set)
+        canvas.bind("<Configure>",lambda event: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.bind_all("<MouseWheel>",lambda e:self.on_mousewheel(e,canvas))
+        second_frame = Frame(canvas,bg="#6666ff")
+        canvas.create_window((400,0),window=second_frame,anchor=NW)
+        comments_frame_lst = self.make_frame_chat_list(msg.comments,second_frame)
+        for frame in comments_frame_lst:
+            frame.pack(fill=X,pady=10,expand=TRUE)
 
-        self.test = PhotoImage(file="logo.png")
-        lbl = Label(self.root,image=self.test)
-        lbl.pack()
+
+        packing_frame = Frame(canvas,bg="#6666ff")
+
+        sent_in_btn = Button(packing_frame,text = msg.sent_in.name, font=("Arial",12,font.ITALIC,font.BOLD),borderwidth=0,bg = color,fg="white")
+        sent_by_lbl = Label(packing_frame,text = msg.sent_by,font=("Arial",12),bg=color,fg="white")
+        time_lbl = Label(packing_frame,text =msg.time_str,font=("Arial",12),bg=color,fg="white")
+        title_lbl = Label(packing_frame,text=msg.title,font=("Arial",15,font.BOLD),bg=color,fg="white")
+        
+        sent_in_btn.pack(side=TOP,anchor=W,pady=10)
+        sent_by_lbl.pack(side=TOP,anchor=W,pady=5)
+        time_lbl.pack(side=TOP,anchor=W,pady=5)
+        title_lbl.pack(side=TOP,anchor=W,pady=20)
+
+        lbl_lst = []
+        holder_msg = msg.msg
+        while len(holder_msg) >40:
+            if(len(holder_msg[40:])>40):
+                tmp_msg = holder_msg[:40]+" -"
+            else:
+                tmp_msg = holder_msg[:40]
+            lbl_lst.append(Label(packing_frame,text=tmp_msg,font=("Arial",12),bg=color,fg="white"))
+            holder_msg = holder_msg[40:]
+        
+        for lbl in lbl_lst:
+            lbl.pack(side=TOP,anchor=W,pady=5)
+
+        if msg.img_name!="no":
+            try:
+                print(msg.img_name)
+                print("yop")
+                self.expand_msg_img_lst.append(PhotoImage(file=msg.img_name))
+                img_lbl = Label(packing_frame,image=self.expand_msg_img_lst[self.expand_msg_ing_lst_index],bg = color)
+                img_lbl.pack(side=TOP,anchor=W,pady=5)
+                self.expand_msg_ing_lst_index+=1                 
+            except:
+                print("sup")
+                space_lbl = Label(packing_frame,height=4,text="",bg=color)
+                space_lbl.pack(side=TOP,anchor=W,pady=5)
+
+        comment_lbl = Label(self.root,text="Comments:",font=("Arial",15,font.BOLD),bg=color,fg="white")
+        comment_lbl.pack(side=TOP,anchor=E,padx=300)
+
+
+
+        packing_frame.pack(side=LEFT,anchor=N,pady=10)
+        scroll_bar.pack(side=RIGHT,fill=Y)
+        canvas.pack(fill=BOTH,expand=TRUE)
+        main_frame.pack(fill=BOTH,expand=TRUE)
+
+
+
+    
+    def on_mousewheel(self,event,canvas):
+        canvas.yview_scroll(-1*(event.delta//120), "units")
 
  
     '''
@@ -79,32 +143,47 @@ class ui_reddit:
     #screen that shows chat_rooms you've joined, if you haven't joined any it'll suggest you to join some
     #also shows some user and social info, have to think what
     def main_menu_screen(self):
+        print("menu")
         lst = self.user_controller.get_msgs_for_main_menu()
         self.clear_screen()
-        self.root.geometry("940x800")
-        self.root.config(bg="#6666ff")
+        self.root.geometry("950x800")
+        self.root.configure(bg="#6666ff")
         top_frame = self.create_top_frame()
         top_frame.config(height=350)
         top_frame.pack(side=TOP,fill=X)
 
-
-        main_frame = Frame(self.root)
-        canvas = Canvas(main_frame)
+        
+        #creating scrolling chat screen
+        main_frame = Frame(self.root,bg="#6666ff")
+        canvas = Canvas(main_frame,width="10",bg="#6666ff")
         scroll_bar = Scrollbar(main_frame,orient=VERTICAL,command=canvas.yview)
         canvas.configure(yscrollcommand=scroll_bar.set)
         canvas.bind("<Configure>",lambda event: canvas.configure(scrollregion=canvas.bbox("all")))
-        second_frame = Frame(canvas)
-        canvas.create_window((0,0),window=second_frame,anchor=NW)
+        canvas.bind_all("<MouseWheel>",lambda e:self.on_mousewheel(e,canvas))
+        second_frame = Frame(canvas,bg="#6666ff")
+        canvas.create_window((350,0),window=second_frame,anchor=NW)
+
+        packing_frame = Frame(canvas,bg="#6666ff")
+
+        user_info_frame = self.user_info(packing_frame)
+        user_info_frame.pack(side=TOP,anchor=W,pady=20)
+
+        user_actions_frame = self.user_actions(packing_frame)
+        user_actions_frame.pack(side=TOP,anchor=W,pady=5)
+
+        packing_frame.pack(side=LEFT,anchor=N,pady=10)
 
 
-        scroll_bar.pack(side=RIGHT,fill=Y)
-        canvas.pack(fill=BOTH,expand=TRUE)
-        main_frame.pack(fill=BOTH,expand=TRUE)
 
         frame_lst = self.make_frame_chat_list(lst,second_frame)
 
         for frame in frame_lst:
-            frame.pack(fill=X,pady=10)
+            frame.pack(fill=X,pady=10,expand=TRUE)
+
+        packing_frame.pack(side=LEFT,anchor=N,pady=10)
+        scroll_bar.pack(side=RIGHT,fill=Y)
+        canvas.pack(fill=BOTH,expand=TRUE)
+        main_frame.pack(fill=BOTH,expand=TRUE)
 
 
 
@@ -313,7 +392,7 @@ class ui_reddit:
             else:
                 actual_msg = msg.msg
             msg_lbl = Label(frame,text = actual_msg,font=("Arial",12),bg = color,height=3)
-            expand_btn = Button(frame,image=self.expand_img,command=lambda: self.expand_message(msg),borderwidth=0,bg = color)
+            expand_btn = Button(frame,image=self.expand_img,command=partial(self.expand_message,msg),borderwidth=0,bg = color)
 
             title_lbl.pack(side=TOP,anchor=E)
             expand_btn.pack(side=LEFT,anchor=N,pady=5,padx=3)
@@ -325,30 +404,53 @@ class ui_reddit:
 
             if msg.img_name!="no":
                 try:
-                    print(msg.img_name)
-                    print("yop")
                     self.chat_img_lst.append(PhotoImage(file=msg.img_name))
                     img_lbl = Label(frame,image=self.chat_img_lst[self.chat_img_lst_index],bg = color)
                     img_lbl.pack(pady=5)
                     self.chat_img_lst_index+=1                 
                 except:
-                    print("sup")
                     space_lbl = Label(frame,height=4,text="",bg=color)
                     space_lbl.pack(pady=2,side=TOP)
             else:
-                print("hyue")
                 space_lbl = Label(frame,height=4,text="",bg=color)
                 space_lbl.pack(pady=2,side=TOP)
             count+=1
             result.append(frame)
         return result
 
+        
+    def user_info(self,container_frame):
+        frame = Frame(container_frame,bg="#6666ff")
+        name_lbl = Label(frame,text=f"You are viewed as {self.user.name}",bg="#6666ff",fg="white",font=("Arial",15))
+        joined_lbl = Label(frame,text=f"You have currently joined {len(self.user.joined_room)} rooms",bg="#6666ff",fg="white",font=("Arial",15))
+        admin_lbl = Label(frame,text=f"You are currently admin at {len(self.user.admin_in)} rooms",bg="#6666ff",fg="white",font=("Arial",15))
+
+        name_lbl.pack(side=TOP,anchor=W)
+        joined_lbl.pack(side=TOP,anchor=W)
+        admin_lbl.pack(side=TOP,anchor=W)
+
+        return frame
+    
+    def user_actions(self,container_frame):
+        frame = Frame(container_frame,bg="#6666ff")
+        msg_lbl = Label(frame,text="User Options:",font=("Arial",15,font.BOLD),bg="#6666ff",fg="white")
+        change_username_btn = Button(frame,text="Change username",command=self.Do,font=("Arial",15,font.ITALIC,font.BOLD),bg="#6666ff",fg="white",borderwidth=0)
+        change_password_btn = Button(frame,text="Change password",command=self.Do,font=("Arial",15,font.ITALIC,font.BOLD),bg="#6666ff",fg="white",borderwidth=0)
+        join_room_by_id_btn = Button(frame,text="Join room by his ID",command=self.Do,font=("Arial",15,font.ITALIC,font.BOLD),bg="#6666ff",fg="white",borderwidth=0)
+        create_chat_room_btn = Button(frame,text="Create Room",command=self.Do,font=("Arial",15,font.ITALIC,font.BOLD),bg="green",borderwidth=0)
+        
+        msg_lbl.pack(side=TOP)
+        create_chat_room_btn.pack(side=TOP)
+        join_room_by_id_btn.pack(side=TOP)
+        change_username_btn.pack(side=TOP)
+        change_password_btn.pack(side=TOP)
+        return frame
 
 
 rot = Tk()
 
 ui = ui_reddit(rot)
 
-ui.main_menu_screen()
+ui.log_in_screen()
 
 rot.mainloop()

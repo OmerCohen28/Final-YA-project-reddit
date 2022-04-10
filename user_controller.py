@@ -67,8 +67,12 @@ use = User("ayal","123",False)
 
 chat = chatroom(use,"Omer's WonderLand",[],1,[],[])                    
 
-msg1 = message("omer",[],"wow this works!!",chat,"user.png","Please work")
-msg2 = message("itai",[],"Pleeeeeeeeeeeeeeeeeeeeeeeeeaaaaaaaaaaaaaaaaaaasssssssssssssssseeeeeeeeeeeeeeeeeeeee",chat,"cat.jpg","holy fuck please")
-msg3 = message("elad",[],"testing",chat,"logo.png","testing")
-msg4 = message("benny",[],"Will This Appear??",chat,"no","Will you see me?")
-msgs = [msg1,msg2,msg3,msg4]
+msg1 = message("omer","wow this works!!",chat,"user.png","Please work")
+msg2 = message("itai","Pleeeeeeeeeeeeeeeeeeeeeeeeeaaaaaaaaaaaaaaaaaaasssssssssssssssseeeeeeeeeeeeeeeeeeeee",chat,"cat.jpg","holy fuck please")
+msg3 = message("elad","testingeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",chat,"logo.png","testing")
+msg4 = message("benny","Will This Appear eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee??",chat,"no","Will you see meeee?")
+msgs = [msg1,msg2,msg4,msg3]
+msg3.add_comment(msg1)
+msg3.add_comment(msg4)
+msg4.add_comment(msg1)
+msg4.add_comment(msg4)
