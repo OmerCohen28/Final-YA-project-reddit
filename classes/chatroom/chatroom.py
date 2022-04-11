@@ -3,12 +3,12 @@ from classes.user.user import User
 
 class chatroom:
 
-    def __init__(self,creator:User,name:str, topcis:list[str],room_id:int, banned_words:list[str], members:list[User]):
+    def __init__(self,creator:User,name:str, topcis:list[str],room_id:int, banned_words:list[str]):
         self.creator = creator
         self.name = name
         self.topcis = topcis
-        self.admins_list = []
-        self.members = members
+        self.admins_list = [creator]
+        self.members = [creator]
         #self.create_time #add a way to know when it was created
         self.room_id = room_id
         self.common_words = []

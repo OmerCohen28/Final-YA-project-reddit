@@ -32,4 +32,22 @@ class db:
         except TypeError:
             return "key didn't have a velue"
 
+    def set_current_chat_room_id(self,curr_free_id:int):
+        self.r.set("chat id",str(curr_free_id))
+    
+    def get_current_chat_room_id(self):
+        try:
+            return int(self.r.get("chat id").decode())
+        except:
+            None
+
+    def set_current_chat_name_to_id_dict(self,curr_dict):
+        self.r.set("name to id dict",pickle.dumps(curr_dict))
+    
+    def get_current_chat_name_to_id_dict(self):
+        try:
+            return pickle.load(self.r.get("name to id dict"))
+        except:
+            return None
+
 

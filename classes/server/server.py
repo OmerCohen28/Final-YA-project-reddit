@@ -1,11 +1,12 @@
 from socket import *
+from classes.chatroom.chatroom import chatroom
 from classes.user.user import User
 from classes.db.db import db
 from select import select
 import pickle
 
 class server:
-    curr_chat_ip =0 #since the server gives the chat id, i created a class variable
+    curr_chat_id =0 #since the server gives the chat id, i created a class variable
                     # to keep track of the current id between all instances
     chat_name_to_id_dict = {}
     def __init__(self,db_conn:db):
@@ -17,6 +18,16 @@ class server:
         self.db_conn = db_conn
 
 
+    def initialize_server_core_vars(self):
+        self.curr_chat_id = self.db_conn.get_current_chat_room_id()
+        if self.curr_chat_id is None:
+            self.curr_chat_id = 0
+            self.db_conn.set_current_chat_room_id(0)
+
+        self.chat_name_to_id_dict = self.db_conn.get_current_chat_name_to_id_dict()
+        if self.chat_name_to_id_dict is None:
+            self.chat_name_to_id_dict = {}
+            self.db_conn.set_current_chat_name_to_id_dict({})
 
     '''
     This function is the main function that should be used to create new users, it updates the user id 
@@ -54,6 +65,26 @@ class server:
     def del_user_by_id(self,id_num:int) ->bool:
         return self.db_conn.delete_user(str(id_num))
 
+    def add_chatroom_to_db(self,chatroom:chatroom) ->bool:
+        if not self.check_if_chatroom_name_exists(chatroom.name):
+            id_num = chatroom.room_id
+            self.chat_name_to_id_dict[chatroom.name] = id_num
+            return self.db_conn.insert_chat(id_num,chatroom)
+        return False
+
+    def check_if_chatroom_name_exists(self,name:str) ->bool:
+        try:
+            id_num = self.chat_name_to_id_dict[name]
+        except:
+            return False
+        tmp = self.db_conn.get_chat(id_num)
+
+        try:
+            x = tmp.common_words
+            return True
+        except:
+            return False
+
     '''
     group of functions devoted to receving new connections, users and chatrooms and handling adding them
     to the DB and overall system
@@ -81,12 +112,18 @@ class server:
                         sockobj.close()
                         continue                   
                     msg = pickle.loads(msg)
+                    print(msg)
                     if(msg=='new user'):
                         self.get_new_user_data(sockobj)
                     if(msg=="log in"):
                         self.check_log_in(sockobj)
-                        print('done')
-
+                    if(msg=="need chat id"):
+                        sockobj.send(pickle.dumps(self.curr_chat_id))
+                        self.curr_chat_id+=1
+                    if(msg=="is exist"):
+                        self.check_new_chatroom_name(sockobj)
+                    if(msg=="new room"):
+                        self.get_new_room_and_add_to_db(sockobj)
     '''
     expected input : name(str),password(str), is_sys_admin(bool))
     expected output: None
@@ -121,6 +158,19 @@ class server:
                 sock.send(pickle.dumps(('ok',check)))
             sock.send(pickle.dumps(("password is inccorect","")))
 
+    def check_new_chatroom_name(self,sock:socket):
+        print('here')
+        print(sock)
+        #sock.send(pickle.dumps("send name"))
+        name = pickle.loads(sock.recv(1054))
+        print("got")
+        print(name)
+        sock.send(pickle.dumps(self.check_if_chatroom_name_exists(name)))
+
+    def get_new_room_and_add_to_db(self,sock:socket):
+        sock.send(pickle.dumps("ok"))
+        new_room = pickle.loads(sock.recv(1054))
+        sock.send(pickle.dumps(self.add_chatroom_to_db(new_room)))
         
         
         

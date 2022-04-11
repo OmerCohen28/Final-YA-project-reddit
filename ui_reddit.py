@@ -1,4 +1,5 @@
 from functools import partial
+from pydoc_data.topics import topics
 from re import L
 from tkinter import *
 from tkinter import font
@@ -122,12 +123,37 @@ class ui_reddit:
         canvas.pack(fill=BOTH,expand=TRUE)
         main_frame.pack(fill=BOTH,expand=TRUE)
 
-
-
-    
+   
     def on_mousewheel(self,event,canvas):
         canvas.yview_scroll(-1*(event.delta//120), "units")
 
+    def create_chatroom(self):
+        toplevel = Toplevel()
+
+        chat_name_lbl = Label(toplevel,text="Enter the name of the chatroom")
+        chat_name_entry = Entry(toplevel)
+
+        topic_lbl = Label(toplevel,text="Enter the main topic of the room, you can always change it later")
+        topic_entry = Entry(toplevel)
+
+        create_btn = Button(toplevel,text="Create Room!", command=lambda:self.mange_creating_new_room(chat_name_entry.get(),topic_entry.get(),toplevel))
+
+        chat_name_lbl.grid(column=0,row=0,pady=10)
+        chat_name_entry.grid(column=1,row=0,pady=10)
+        topic_lbl.grid(column=0,row=1,pady=10)
+        topic_entry.grid(column=1,row=1,pady=10)
+        create_btn.grid(column=0,row=2,pady=15)
+
+    def mange_creating_new_room(self,name,topic,toplevel):
+        print(name)
+        if self.user_controller.check_if_room_name_exists(name):
+            messagebox.showerror(title="Room name already exists",message="Sorry but this room name is already in use")
+        else:
+            result = self.user_controller.create_new_room_with_server(self.user,name,topic)
+            if result:
+                toplevel.destroy()
+            else:
+                messagebox.showerror(title="Creating a room failed",message="The proccess you attempted has failed, try again")
  
     '''
     main functions - 
@@ -146,24 +172,24 @@ class ui_reddit:
         print("menu")
         lst = self.user_controller.get_msgs_for_main_menu()
         self.clear_screen()
-        self.root.geometry("950x800")
-        self.root.configure(bg="#6666ff")
+        self.root.geometry("1150x800")
+        self.root.configure(bg="white")
         top_frame = self.create_top_frame()
         top_frame.config(height=350)
         top_frame.pack(side=TOP,fill=X)
 
         
         #creating scrolling chat screen
-        main_frame = Frame(self.root,bg="#6666ff")
-        canvas = Canvas(main_frame,width="10",bg="#6666ff")
+        main_frame = Frame(self.root)
+        canvas = Canvas(main_frame,width="10")
         scroll_bar = Scrollbar(main_frame,orient=VERTICAL,command=canvas.yview)
         canvas.configure(yscrollcommand=scroll_bar.set)
         canvas.bind("<Configure>",lambda event: canvas.configure(scrollregion=canvas.bbox("all")))
         canvas.bind_all("<MouseWheel>",lambda e:self.on_mousewheel(e,canvas))
-        second_frame = Frame(canvas,bg="#6666ff")
+        second_frame = Frame(canvas)
         canvas.create_window((350,0),window=second_frame,anchor=NW)
 
-        packing_frame = Frame(canvas,bg="#6666ff")
+        packing_frame = Frame(canvas)
 
         user_info_frame = self.user_info(packing_frame)
         user_info_frame.pack(side=TOP,anchor=W,pady=20)
@@ -441,7 +467,7 @@ class ui_reddit:
         change_username_btn = Button(frame,text="Change username",command=self.Do,font=("Arial",15,font.ITALIC,font.BOLD),bg="#6666ff",fg="white",borderwidth=0)
         change_password_btn = Button(frame,text="Change password",command=self.Do,font=("Arial",15,font.ITALIC,font.BOLD),bg="#6666ff",fg="white",borderwidth=0)
         join_room_by_id_btn = Button(frame,text="Join room by his ID",command=self.Do,font=("Arial",15,font.ITALIC,font.BOLD),bg="#6666ff",fg="white",borderwidth=0)
-        create_chat_room_btn = Button(frame,text="Create Room",command=self.Do,font=("Arial",15,font.ITALIC,font.BOLD),bg="green",borderwidth=0)
+        create_chat_room_btn = Button(frame,text="Create Room",command=self.create_chatroom,font=("Arial",15,font.ITALIC,font.BOLD),bg="green",borderwidth=0)
         
         msg_lbl.pack(side=TOP)
         create_chat_room_btn.pack(side=TOP)
