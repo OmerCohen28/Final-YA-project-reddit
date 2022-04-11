@@ -11,6 +11,6 @@ w.pack()
 mainloop()'''
 
 import datetime
-
+from tkinter import  *
 x = datetime.datetime.now()
 
