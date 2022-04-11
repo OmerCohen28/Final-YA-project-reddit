@@ -293,7 +293,11 @@ class ui_reddit:
             send_by_lbl = Label(frame,text = f"user: {msg.sent_by}",font=("Arial",12),bg = color)
             time_lbl = Label(frame,text = msg.time_str,font=("Arial",12),bg = color)
             sent_in_btn = Button(frame,text = msg.sent_in.name, font=("Arial",12,font.ITALIC,font.BOLD),borderwidth=0,bg = color)
-            title_lbl = Label(frame,text = msg.title,font=("arial",15,font.BOLD),bg = color)
+            if(len(msg.title)>50):
+                actual_title = msg.title[:50] + "..."
+            else:
+                actual_title = msg.title
+            title_lbl = Label(frame,text = actual_title,font=("arial",15,font.BOLD),bg = color)
             if(len(msg.msg)>50):
                 actual_msg = msg.msg[:50] + "..."
             else:
