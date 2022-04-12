@@ -51,3 +51,6 @@ class db:
             return None
 
 
+db_conn = db()
+print((db_conn.get_chat(0)))
+    

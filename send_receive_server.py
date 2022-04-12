@@ -1,7 +1,7 @@
 import select
 from socket import *
 from classes.server.server import *
-from classes.db.db import *
+from model import *
 
 
 

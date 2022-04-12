@@ -1,7 +1,7 @@
 from socket import *
 from classes.chatroom.chatroom import chatroom
 from classes.user.user import User
-from classes.db.db import db
+from model import db
 from select import select
 import pickle
 
@@ -16,6 +16,7 @@ class server:
         self.conn_sock.setsockopt(SOL_SOCKET,SO_REUSEADDR, True)
         self.all_sockets = [self.conn_sock]
         self.db_conn = db_conn
+        self.initialize_server_core_vars()
 
 
     def initialize_server_core_vars(self):

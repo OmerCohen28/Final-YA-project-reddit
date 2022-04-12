@@ -13,6 +13,7 @@ class chatroom:
         self.room_id = room_id
         self.common_words = []
         self.banned_words = banned_words
+        self.msgs = []
 
     def kick(self,user:User) ->bool:
         try:

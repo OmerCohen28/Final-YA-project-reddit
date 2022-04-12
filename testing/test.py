@@ -12,5 +12,8 @@ mainloop()'''
 
 import datetime
 from tkinter import  *
-x = datetime.datetime.now()
+root = Tk()
+example = Label(root, text="example", font=('Arial',9,'underline'))
+example.pack()
+root.mainloop()
 
