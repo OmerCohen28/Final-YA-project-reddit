@@ -156,12 +156,13 @@ class server:
                 return
             if(password == check.password):
                 sock.send(pickle.dumps(('ok',check)))
+                return
             sock.send(pickle.dumps(("password is inccorect","")))
 
     def check_new_chatroom_name(self,sock:socket):
         print('here')
         print(sock)
-        #sock.send(pickle.dumps("send name"))
+        sock.send(pickle.dumps("send name"))
         name = pickle.loads(sock.recv(1054))
         print("got")
         print(name)

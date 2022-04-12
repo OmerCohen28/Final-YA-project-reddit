@@ -50,8 +50,8 @@ class user_controller:
         print("starting procces")
         id_num = self.get_new_room_id_from_server()
         new_chat = chatroom(creator,name,[topic],id_num,[])
-        if self.check_if_room_name_exists(name):
-            self.sock.send(pickle.dump("new room"))
+        if not self.check_if_room_name_exists(name):
+            self.sock.send(pickle.dumps("new room"))
             self.sock.recv(1054)
             self.sock.send(pickle.dumps(new_chat))
             return pickle.loads(self.sock.recv(1054))
@@ -67,10 +67,13 @@ class user_controller:
     def check_if_room_name_exists(self,name:str) ->bool:
         print("checking if exists")
         self.sock.send(pickle.dumps("is exist"))
-        #tmp = self.sock.recv(1054)
+        tmp = self.sock.recv(1054)
+        print(tmp)
         self.sock.send(pickle.dumps(name))
         print('sent')
-        return pickle.loads(self.sock.recv(1054))
+        result = pickle.loads(self.sock.recv(1054))
+        print(result)
+        return result
 
     @staticmethod
     def get_open_port():

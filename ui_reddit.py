@@ -387,18 +387,7 @@ class ui_reddit:
 
 
     #main menu screen functin groups
-    def user_drop_down(self,frame):
-        clicked = StringVar()
-        options = ["Options","User Info","Change User Settings","Window Settings"]
-        clicked.set(options[0])
-        drop_down = OptionMenu(frame,clicked,*options,command=self.user_options)   
-        drop_down.config(bg="#6666ff",fg="white")
-        return drop_down
-
-    def user_options(self,event):
-        pass
-
-    def make_frame_chat_list(self,lst:list[message],container_frame:Frame) ->list[Frame]:
+    def make_frame_chat_list(self,lst,container_frame:Frame):
         result = []
         self.expand_img = PhotoImage(file="maximize.png")
         count =0
