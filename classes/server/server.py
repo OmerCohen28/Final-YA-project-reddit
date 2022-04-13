@@ -70,6 +70,7 @@ class server:
         if not self.check_if_chatroom_name_exists(chatroom.name):
             id_num = chatroom.room_id
             self.chat_name_to_id_dict[chatroom.name] = id_num
+            self.db_conn.set_current_chat_name_to_id_dict(self.chat_name_to_id_dict)
             return self.db_conn.insert_chat(id_num,chatroom)
         return False
 
@@ -121,6 +122,7 @@ class server:
                     if(msg=="need chat id"):
                         sockobj.send(pickle.dumps(self.curr_chat_id))
                         self.curr_chat_id+=1
+                        self.db_conn.set_current_chat_room_id(self.curr_chat_id)
                     if(msg=="is exist"):
                         self.check_new_chatroom_name(sockobj)
                     if(msg=="new room"):

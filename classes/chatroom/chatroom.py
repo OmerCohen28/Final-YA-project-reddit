@@ -33,4 +33,7 @@ class chatroom:
     def make_admin(self,user:str) ->None:
         self.admins_list.append(user)
 
+    def add_msg(self,msg):
+        self.msgs.append(msg)
+
 

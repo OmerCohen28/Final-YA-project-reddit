@@ -136,28 +136,91 @@ class ui_reddit:
         chat_name_lbl = Label(toplevel,text="Enter the name of the chatroom")
         chat_name_entry = Entry(toplevel)
 
-        topic_lbl = Label(toplevel,text="Enter the main topic of the room, you can always change it later")
-        topic_entry = Entry(toplevel)
+        msg_lbl = Label(toplevel,text="When inputting topics and banned words, make sure to sepeate them by a ','")
 
-        create_btn = Button(toplevel,text="Create Room!", command=lambda:self.mange_creating_new_room(chat_name_entry.get(),topic_entry.get(),toplevel))
+        topics_lbl = Label(toplevel,text="Enter the main topics of the room, you can always change it later")
+        topics_entry = Entry(toplevel)
 
-        chat_name_lbl.grid(column=0,row=0,pady=10)
-        chat_name_entry.grid(column=1,row=0,pady=10)
-        topic_lbl.grid(column=0,row=1,pady=10)
-        topic_entry.grid(column=1,row=1,pady=10)
-        create_btn.grid(column=0,row=2,pady=15)
+        banned_words_lbl = Label(toplevel,text="Enter the words you do not wish to see in your chat room, you can always change it later")
+        banned_words_entry = Entry(toplevel)
 
-    def mange_creating_new_room(self,name,topic,toplevel):
+        
+
+        create_btn = Button(toplevel,text="Create Room!", command=lambda:self.mange_creating_new_room(chat_name_entry.get(),topics_entry.get(),banned_words_entry.get(),toplevel))
+
+        chat_name_lbl.grid(column=0,row=0,pady=10,padx=10)
+        chat_name_entry.grid(column=1,row=0,pady=10,padx=10)
+        msg_lbl.grid(column=0,row=1,pady=10,padx=30)
+        topics_lbl.grid(column=0,row=2,pady=10,padx=10)
+        topics_entry.grid(column=1,row=2,pady=10,padx=10)
+        banned_words_lbl.grid(column=0,row=3,pady=10,padx=10)
+        banned_words_entry.grid(column=1,row=3,pady=10,padx=10)
+        create_btn.grid(column=0,row=4,pady=15,padx=10)
+
+    def mange_creating_new_room(self,name,topics,banned_words,toplevel):
         print(name)
         if self.user_controller.check_if_room_name_exists(name):
             messagebox.showerror(title="Room name already exists",message="Sorry but this room name is already in use")
         else:
-            result = self.user_controller.create_new_room_with_server(self.user,name,topic)
+            try:
+                topics_lst = topics.split(",")
+                banned_words_lst = banned_words.split(",")
+            except:
+                messagebox.showerror(title="wrong input",message="Sorry but your input of the fields was wrong, make sure to follow the rules stated")
+                return
+            result = self.user_controller.create_new_room_with_server(self.user,name,topics_lst,banned_words_lst)
             if result:
                 toplevel.destroy()
             else:
                 messagebox.showerror(title="Creating a room failed",message="The proccess you attempted has failed, try again")
- 
+    def make_frame_chat_list(self,lst,container_frame:Frame):
+        result = []
+        self.expand_img = PhotoImage(file="maximize.png")
+        count =0
+        for msg in lst:
+            if count % 2 == 0:
+                color ="#C8C8C8"
+            else:
+                color = "#F0F0F0"
+
+            frame = Frame(container_frame,bg = color,highlightbackground="#0066ff", highlightthickness=2,width=300)
+            time_lbl = Label(frame,text = msg.time_str,font=("Arial",12),bg = color)
+            sent_in_btn = Button(frame,text = f"Room/{msg.sent_in.name}", font=("Arial",12,font.ITALIC,font.BOLD),borderwidth=0,bg = color,command=partial(self.in_chat_screen,msg.sent_in))
+            if(len(msg.title)>50):
+                actual_title = msg.title[:50] + f"... By {msg.sent_by}"
+            else:
+                actual_title = msg.title + f" By {msg.sent_by}"
+            title_lbl = Label(frame,text = actual_title,font=("arial",15,font.BOLD),bg = color)
+            if(len(msg.msg)>50):
+                actual_msg = msg.msg[:50] + "..."
+            else:
+                actual_msg = msg.msg
+            msg_lbl = Label(frame,text = actual_msg,font=("Arial",12),bg = color,height=3)
+            expand_btn = Button(frame,image=self.expand_img,command=partial(self.expand_message,msg),borderwidth=0,bg = color)
+
+            title_lbl.pack(side=TOP,anchor=W)
+            time_lbl.pack(side=TOP,anchor=E,pady=5,padx=3) 
+            sent_in_btn.pack(side=TOP,anchor=W,pady=5)
+            msg_lbl.pack(pady=10,side=TOP,anchor=W)
+            expand_btn.pack(side=BOTTOM,anchor=E,pady=5,padx=3)
+        
+
+            if msg.img_name!="no":
+                try:
+                    self.chat_img_lst.append(PhotoImage(file=msg.img_name))
+                    img_lbl = Label(frame,image=self.chat_img_lst[self.chat_img_lst_index],bg = color)
+                    img_lbl.pack(side=TOP,anchor=W)
+                    self.chat_img_lst_index+=1                 
+                except:
+                    space_lbl = Label(frame,height=4,text="",bg=color)
+                    space_lbl.pack(side=TOP,anchor=W)
+            else:
+                space_lbl = Label(frame,height=4,text="",bg=color)
+                space_lbl.pack(side=TOP,anchor=W)
+            count+=1
+            result.append(frame)
+        return result      
+            
     '''
     main functions - 
     - main_menu_screen()
@@ -168,6 +231,39 @@ class ui_reddit:
 
     all other functions are supportive functions of these 4 main ones
     '''
+
+    def in_chat_screen(self,chatroom:chatroom):
+        self.clear_screen()
+        self.root.geometry("1150x800")
+        self.root.configure(bg="white")
+        top_frame = self.create_top_frame()
+        top_frame.config(height=350)
+        top_frame.pack(side=TOP,fill=X)
+
+        #creating scrolling chat screen
+        main_frame = Frame(self.root)
+        canvas = Canvas(main_frame,width="10")
+        scroll_bar = Scrollbar(main_frame,orient=VERTICAL,command=canvas.yview)
+        canvas.configure(yscrollcommand=scroll_bar.set)
+        canvas.bind("<Configure>",lambda event: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.bind_all("<MouseWheel>",lambda e:self.on_mousewheel(e,canvas))
+        second_frame = Frame(canvas)
+        canvas.create_window((225,0),window=second_frame,anchor=NW)
+
+        packing_frame = Frame(canvas)
+        user_stats_frame = self.user_stats(chatroom,packing_frame)
+        user_stats_frame.pack(side=TOP,anchor=W,pady=5)
+        packing_frame.pack(side=LEFT,anchor=N,pady=10)
+
+        frame_lst = self.make_frame_chat_list(chatroom.msgs,second_frame)
+        for frame in frame_lst:
+            frame.pack(fill=BOTH,pady=10,expand=TRUE)
+
+        scroll_bar.pack(side=RIGHT,fill=Y)
+        canvas.pack(fill=BOTH,expand=TRUE)
+        main_frame.pack(fill=BOTH,expand=TRUE)
+
+
 
 
     def main_menu_screen(self):
@@ -198,10 +294,10 @@ class ui_reddit:
         packing_frame.pack(side=LEFT,anchor=N,pady=10)
 
 
-        scroll_bar_frame = self.create_scroll_bar_frame(second_frame)
-        scroll_bar_frame.pack(fill=X,pady=10,expand=TRUE)
-        frame_lst = self.make_frame_chat_list(lst,second_frame)
+        search_bar_frame = self.create_search_bar_frame(second_frame)
+        search_bar_frame.pack(fill=X,pady=10,expand=TRUE)
 
+        frame_lst = self.make_frame_chat_list(lst,second_frame)
         for frame in frame_lst:
             frame.pack(fill=X,pady=10,expand=TRUE)
 
@@ -209,19 +305,7 @@ class ui_reddit:
         scroll_bar.pack(side=RIGHT,fill=Y)
         canvas.pack(fill=BOTH,expand=TRUE)
         main_frame.pack(fill=BOTH,expand=TRUE)
-
-
-    def in_chat_screen(self):
-        self.clear_screen()
-        self.root.geometry("1150x800")
-        self.root.configure(bg="white")
-        top_frame = self.create_top_frame()
-        top_frame.config(height=350)
-        top_frame.pack(side=TOP,fill=X)
-        
-        
-        
-        
+      
 
 
     '''
@@ -348,11 +432,6 @@ class ui_reddit:
 
 
 
-    #shows the listbox of the chat + some other fetures
-    #make it an option to click on a certain message and comment on it
-    def in_chat_screen(self):
-        pass
-
     #screen after clicking on a message, maybe open a whole new screen or maybe change the current one
     #shows comments on a message
     def comment_section_screen(self):
@@ -392,53 +471,6 @@ class ui_reddit:
 
 
     #main menu screen functin groups
-    def make_frame_chat_list(self,lst,container_frame:Frame):
-        result = []
-        self.expand_img = PhotoImage(file="maximize.png")
-        count =0
-        for msg in lst:
-            if count % 2 == 0:
-                color ="#C8C8C8"
-            else:
-                color = "#F0F0F0"
-
-            frame = Frame(container_frame,bg = color,highlightbackground="#0066ff", highlightthickness=2)
-            time_lbl = Label(frame,text = msg.time_str,font=("Arial",12),bg = color)
-            sent_in_btn = Button(frame,text = f"Room/{msg.sent_in.name}", font=("Arial",12,font.ITALIC,font.BOLD),borderwidth=0,bg = color)
-            if(len(msg.title)>50):
-                actual_title = msg.title[:50] + f"... By {msg.sent_by}"
-            else:
-                actual_title = msg.title + f" By {msg.sent_by}"
-            title_lbl = Label(frame,text = actual_title,font=("arial",15,font.BOLD),bg = color)
-            if(len(msg.msg)>50):
-                actual_msg = msg.msg[:50] + "..."
-            else:
-                actual_msg = msg.msg
-            msg_lbl = Label(frame,text = actual_msg,font=("Arial",12),bg = color,height=3)
-            expand_btn = Button(frame,image=self.expand_img,command=partial(self.expand_message,msg),borderwidth=0,bg = color)
-
-            title_lbl.pack(side=TOP,anchor=W)
-            time_lbl.pack(side=TOP,anchor=E,pady=5,padx=3) 
-            sent_in_btn.pack(side=TOP,anchor=W,pady=5)
-            msg_lbl.pack(pady=10,side=TOP,anchor=W)
-            expand_btn.pack(side=BOTTOM,anchor=E,pady=5,padx=3)
-        
-
-            if msg.img_name!="no":
-                try:
-                    self.chat_img_lst.append(PhotoImage(file=msg.img_name))
-                    img_lbl = Label(frame,image=self.chat_img_lst[self.chat_img_lst_index],bg = color)
-                    img_lbl.pack(side=TOP,anchor=W)
-                    self.chat_img_lst_index+=1                 
-                except:
-                    space_lbl = Label(frame,height=4,text="",bg=color)
-                    space_lbl.pack(side=TOP,anchor=W)
-            else:
-                space_lbl = Label(frame,height=4,text="",bg=color)
-                space_lbl.pack(side=TOP,anchor=W)
-            count+=1
-            result.append(frame)
-        return result      
     
     def user_actions(self,container_frame:Frame):
         frame = Frame(container_frame)
@@ -453,16 +485,32 @@ class ui_reddit:
         change_password_btn.pack(side=TOP,pady=10)
         return frame
 
-    def create_scroll_bar_frame(self,container_frame:Frame):
+    def create_search_bar_frame(self,container_frame:Frame):
         frame = Frame(container_frame,highlightbackground="#0066ff", highlightthickness=2)
 
-        scroll_bar_entry = Entry(frame,font=("Arial",15),highlightbackground="#0066ff", highlightthickness=2,width=50)
+        search_bar_entry = Entry(frame,font=("Arial",15),highlightbackground="#0066ff", highlightthickness=2,width=50)
 
         search_btn = Button(frame,text="Search Room",font=("Arial",10,font.BOLD),highlightbackground="black", highlightthickness=2,bg="#0066ff",fg="white")
 
-        scroll_bar_entry.pack(side=LEFT,padx=10)
+        search_bar_entry.pack(side=LEFT,padx=10)
         search_btn.pack(side=LEFT,padx=10,pady=10)
         return frame
+
+    #in chat screen function group
+    def user_stats(self,chatroom,containter_frame:Frame):
+        frame = Frame(containter_frame)
+        msg_lbl = Label(frame,text="Room Info:",font=("Arial",10))
+        created_by_lbl = Label(frame,text=f"This room was created by {chatroom.creator.name}",font=("Arial",10))
+        members_lbl = Label(frame,text=f"This room has {len(chatroom.members)} members",font=("Arial",10))
+        admins_lbl = Label(frame,text=f"This room has {len(chatroom.admins_list)} admins",font=("Arial",10))
+
+        msg_lbl.pack(side=TOP,pady=10,anchor=W)
+        created_by_lbl.pack(side=TOP,pady=10,anchor=W)
+        members_lbl.pack(side=TOP,pady=10,anchor=W)
+        admins_lbl.pack(side=TOP,pady=10,anchor=W)
+
+        return frame
+
 
 rot = Tk()
 

@@ -12,8 +12,5 @@ mainloop()'''
 
 import datetime
 from tkinter import  *
-root = Tk()
-example = Label(root, text="example", font=('Arial',9,'underline'))
-example.pack()
-root.mainloop()
-
+s = "yo"
+print(s.split(","))

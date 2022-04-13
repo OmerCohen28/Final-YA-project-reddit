@@ -46,10 +46,10 @@ class user_controller:
     def get_msgs_for_main_menu(self):
         return msgs
 
-    def create_new_room_with_server(self,creator:User,name:str,topic:str) -> bool:
+    def create_new_room_with_server(self,creator:User,name:str,topics,banned_words) -> bool:
         print("starting procces")
         id_num = self.get_new_room_id_from_server()
-        new_chat = chatroom(creator,name,[topic],id_num,[])
+        new_chat = chatroom(creator,name,topics,id_num,banned_words)
         if not self.check_if_room_name_exists(name):
             self.sock.send(pickle.dumps("new room"))
             self.sock.recv(1054)
@@ -96,13 +96,16 @@ class user_controller:
 use = User("ayal","123",False)
 
 chat = chatroom(use,"Omer's WonderLand",[],1,[])                    
-
+chat2 = chatroom(use,"Omer's WonderLand 2nd edition",[],2,[])
 msg1 = message("omer","wow this works!!",chat,"user.png","Please work")
 msg2 = message("itai","Pleeeeeeeeeeeeeeeeeeeeeeeeeaaaaaaaaaaaaaaaaaaasssssssssssssssseeeeeeeeeeeeeeeeeeeee",chat,"cat.jpg","holy fuck please")
 msg3 = message("elad","testingeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",chat,"logo.png","testing")
 msg4 = message("benny","Will This Appear eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee??",chat,"no","Will you see meeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee?")
-msgs = [msg1,msg2,msg4,msg3]
+msg5 = message("omer2","Hello",chat2,"reddit-logo.png","Wow hello there")
+msgs = [msg1,msg2,msg4,msg3,msg5]
 msg3.add_comment(msg1)
 msg3.add_comment(msg4)
 msg4.add_comment(msg1)
 msg4.add_comment(msg4)
+chat2.add_msg(msg5)
+chat.msgs = [msg1,msg2,msg3,msg4]
