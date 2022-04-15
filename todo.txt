@@ -1,10 +1,24 @@
-urgent - 
-    -now that the UI is up, need to set up the connection between server and client 
-     and start controling the traffic there.
+need to think how to update the "current users" at each
+user's screen, also how to broadcast new message
 
+current thought - run a thread user side
+waiting for updates on new message
+if one comes, refresh the screen with the new message
+
+how to send the message? keep a dictionary of all the online users and their matching socket, when someone leaves, remove them 
+from the dictionary
+
+current urgent problem is to make the server notify other users of changes!
+
+besides that and UI i just have to do text analaizing and search bar
 
 need to do-
-    -add expand post to the main_menu posts and in_chat posts to open comment section etc
+    -stated above
+    - search bar
+    - text analaizing
+    -admin
+    -UI
+    - find a way to calcuate the time a server and a user is up, delete chatroom accordingly
 
 not urgent -
     -add an icon to the app

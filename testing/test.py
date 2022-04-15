@@ -12,5 +12,23 @@ mainloop()'''
 
 import datetime
 from tkinter import  *
-s = "yo"
-print(s.split(","))
+from tkinter import filedialog
+from PIL import ImageTk,Image
+import re
+import pickle
+from os.path import exists
+from redis import *
+#filename = filedialog.askopenfilename(filetypes=[('image files', '.png'), ('image files', '.jpg')], )
+#print(filename)
+
+#name = filename[filename.rfind("/")+1:]
+#print(name)
+x = {"4":5,5:3,"g":"f"}
+for key in x:
+    print(f"{key} {x[key]}")
+
+
+
+
+
+

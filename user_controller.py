@@ -1,4 +1,3 @@
-from ast import Str
 import sys
 from socket import *
 import pickle
@@ -6,6 +5,8 @@ from classes.user.user import User
 from classes.chatroom.chatroom import chatroom
 from classes.message.message import message
 import random
+import time
+from os.path import exists
 class user_controller:
     def __init__(self):
         while True:
@@ -20,7 +21,11 @@ class user_controller:
             except:
                 pass
 
-    def close_sock(self):
+    def close_connection(self,name):
+        self.sock.send(pickle.dumps("leaving"))
+        who_leaves = pickle.loads(self.sock.recv(1054))
+        print(who_leaves)
+        self.sock.send(pickle.dumps(name))
         self.sock.close()
 
 
@@ -74,6 +79,64 @@ class user_controller:
         result = pickle.loads(self.sock.recv(1054))
         print(result)
         return result
+    
+    def get_room_by_id(self,id_num:int,name:str) ->chatroom:
+        self.sock.send(pickle.dumps("get room by id"))
+        msg = pickle.loads(self.sock.recv(1054))
+        print(msg)
+        self.sock.send(pickle.dumps(id_num))
+        chat_room = pickle.loads(self.sock.recv(1054))
+        self.sock.send(pickle.dumps(name))
+        ok_msg = pickle.loads(self.sock.recv(1054))
+        print(ok_msg)
+        need_imgs_names = []
+        for msg in chat_room.msgs:
+            if not exists(f"pictures\\{msg.img_name}"):
+                need_imgs_names.append(msg.img_name)
+        if len(need_imgs_names) > 0:
+            self.sock.send(pickle.dumps("need"))
+            need_what = pickle.loads(self.sock.recv(1054))
+            print(need_what)
+            self.sock.send(pickle.dumps(need_imgs_names))
+
+            for img_name in need_imgs_names:
+                self.get_picture_and_save(img_name)
+        else:
+            self.sock.send(pickle.dumps("no need"))
+
+
+        return chat_room
+    
+    def create_message_and_sent_to_server(self,name:str,msg:str,chat_room:chatroom,img_path_and_name:str,title:str):
+        if img_path_and_name != "":
+            img_name = img_path_and_name[img_path_and_name.rfind("/")+1:]
+        else:
+            img_name = ""
+        new_msg = message(name,msg,chat_room,img_name,title)
+        self.sock.send(pickle.dumps("new msg"))
+        send_msg = pickle.loads(self.sock.recv(1054))
+        print(send_msg)
+        self.sock.send(pickle.dumps(new_msg))
+        time.sleep(0.5)
+        self.sock.send("stop".encode())
+        ok_msg = pickle.loads(self.sock.recv(1054))
+        print(ok_msg)
+        if img_name != "":
+            with open(img_path_and_name,'rb') as img:
+                self.sock.send(img.read())
+                time.sleep(0.5)
+                self.sock.send("stop".encode())
+
+                
+    def get_picture_and_save(self,img_name:str):
+            img = b""
+            while True:
+                packet = self.sock.recv(1054)
+                if packet == "stop".encode():
+                    break
+                img+=packet
+            with open(f"pictures\\{img_name}",'wb') as new_img:
+                new_img.write(img)
 
     @staticmethod
     def get_open_port():

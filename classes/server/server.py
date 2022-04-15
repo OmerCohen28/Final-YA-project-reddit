@@ -1,9 +1,12 @@
+from itertools import count
 from socket import *
 from classes.chatroom.chatroom import chatroom
 from classes.user.user import User
 from model import db
 from select import select
 import pickle
+from os.path import exists
+import time
 
 class server:
     curr_chat_id =0 #since the server gives the chat id, i created a class variable
@@ -16,6 +19,7 @@ class server:
         self.conn_sock.setsockopt(SOL_SOCKET,SO_REUSEADDR, True)
         self.all_sockets = [self.conn_sock]
         self.db_conn = db_conn
+        self.current_user_chat_room_dict = {}
         self.initialize_server_core_vars()
 
 
@@ -127,6 +131,18 @@ class server:
                         self.check_new_chatroom_name(sockobj)
                     if(msg=="new room"):
                         self.get_new_room_and_add_to_db(sockobj)
+                    if(msg=="get room by id"):
+                        self.return_room_by_id(sockobj)
+                    if(msg=="new msg"):
+                        self.get_new_message_and_add_to_db(sockobj)
+                    if(msg=="leaving"):
+                        sockobj.send(pickle.dumps("who?"))
+                        user_leaving = pickle.loads(sockobj.recv(1054))
+                        try:
+                            del self.current_user_chat_room_dict[user_leaving]
+                        except KeyError:
+                            pass
+
     '''
     expected input : name(str),password(str), is_sys_admin(bool))
     expected output: None
@@ -175,6 +191,73 @@ class server:
         sock.send(pickle.dumps("ok"))
         new_room = pickle.loads(sock.recv(1054))
         sock.send(pickle.dumps(self.add_chatroom_to_db(new_room)))
+    
+    def return_room_by_id(self,sock:socket):
+        sock.send(pickle.dumps("what id"))
+        id_num = pickle.loads(sock.recv(1054))
+        print(id_num)
+        chat_room = self.db_conn.get_chat(id_num)
+        chat_room.current_members = self.get_how_many_members_are_online_to_a_room(id_num)
+        sock.send(pickle.dumps(chat_room))
+        name = pickle.loads(sock.recv(1054))
+        self.current_user_chat_room_dict[name] = id_num
+        sock.send(pickle.dumps("ok"))
+        msg = pickle.loads(sock.recv(1054))
+        if msg == "no need":
+            return
+        sock.send(pickle.dumps("need what?"))
+        need = pickle.loads(sock.recv(1054))
+
+        for img_name in need:
+            self.send_picture(sock,img_name)
+    
+    def get_how_many_members_are_online_to_a_room(self,id_num):
+        count=1
+        for key in self.current_user_chat_room_dict:
+            if self.current_user_chat_room_dict[key] == id_num:
+                count+=1
+        return count
+
+    def get_picture_and_save(self,sock:socket,img_name:str):
+            img = b""
+            while True:
+                packet = sock.recv(1054)
+                if packet == "stop".encode():
+                    break
+                img+=packet
+            with open(f"server_pics\\{img_name}",'wb') as new_img:
+                new_img.write(img)
+    
+    def send_picture(self,sock,img_name):
+        with open(f"server_pics\\{img_name}",'rb') as img:
+            sock.send(img.read())
+            time.sleep(0.5)
+            sock.send("stop".encode())     
+
+    def get_new_message_and_add_to_db(self,sock:socket):
+        print('sup')
+        sock.send(pickle.dumps("send msg"))
+        print('supsup?')
+        data = sock.recv(1054)
+        while True:
+            packet = sock.recv(1054)
+            if packet == "stop".encode():
+                break
+            data+=packet
+        new_msg = pickle.loads(data)
+        sock.send(pickle.dumps("ok"))
+        if new_msg.img_name != "":   
+            if exists(f"server_pics\\{new_msg.img_name}"):
+                new_msg.img_name = new_msg.img_name[:new_msg.img_name.rfind(".")]
+            self.get_picture_and_save(sock,new_msg.img_name)
+
+        chat_room = new_msg.sent_in
+        chat_room.msgs.append(new_msg)
+        self.db_conn.insert_chat(chat_room.room_id,chat_room)
+
+    def notify_all_members_of_chatroom_for_new_msg(self,chat_room):
+        pass
+        #goodluck bitch, luv u
         
         
         

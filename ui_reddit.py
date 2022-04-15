@@ -1,16 +1,17 @@
 from functools import partial
+from re import I
 from tkinter import *
 from tkinter import font
 from tkinter import messagebox
-from turtle import width
-import PIL
-from PIL import ImageTk
+from tkinter import filedialog
+from PIL import ImageTk,Image
 import pickle
 from classes.chatroom.chatroom import chatroom
 from classes.message.message import message
 from classes.user.user import User
 from user_controller import user_controller
 import time
+
 class ui_reddit:
 
     def __init__(self,root:Tk):
@@ -31,7 +32,7 @@ class ui_reddit:
             widget.destroy()
 
     def handle_close(self):
-        self.user_controller.close_sock()
+        self.user_controller.close_connection(self.user.name)
         messagebox.showinfo(message="Thanks for being here")
         self.root.destroy()
 
@@ -39,7 +40,7 @@ class ui_reddit:
         frame = Frame(self.root,bg="#6699ff")
 
         lbl = Label(frame,text = "Reddit Clone",font=("Arial",17,font.BOLD),bg="#6699ff")
-        self.logo_img = PhotoImage(file='reddit-logo.png')
+        self.logo_img = ImageTk.PhotoImage(Image.open('program_pics\\reddit-logo.png'))
         menu_btn = Button(frame,image=self.logo_img,borderwidth=0,bg="#6699ff",command=self.main_menu_screen)
         
         if self.user.is_sys_admin:
@@ -107,7 +108,7 @@ class ui_reddit:
             try:
                 print(msg.img_name)
                 print("yop")
-                self.expand_msg_img_lst.append(PhotoImage(file=msg.img_name))
+                self.expand_msg_img_lst.append(ImageTk.PhotoImage(Image.open(f"pictures\\{msg.img_name}")))
                 img_lbl = Label(packing_frame,image=self.expand_msg_img_lst[self.expand_msg_ing_lst_index],bg = color)
                 img_lbl.pack(side=TOP,anchor=W,pady=5)
                 self.expand_msg_ing_lst_index+=1                 
@@ -132,7 +133,7 @@ class ui_reddit:
 
     def create_chatroom(self):
         toplevel = Toplevel()
-
+        toplevel.grab_set()
         chat_name_lbl = Label(toplevel,text="Enter the name of the chatroom")
         chat_name_entry = Entry(toplevel)
 
@@ -175,7 +176,7 @@ class ui_reddit:
                 messagebox.showerror(title="Creating a room failed",message="The proccess you attempted has failed, try again")
     def make_frame_chat_list(self,lst,container_frame:Frame):
         result = []
-        self.expand_img = PhotoImage(file="maximize.png")
+        self.expand_img = ImageTk.PhotoImage(Image.open("program_pics\\maximize.png"))
         count =0
         for msg in lst:
             if count % 2 == 0:
@@ -185,7 +186,7 @@ class ui_reddit:
 
             frame = Frame(container_frame,bg = color,highlightbackground="#0066ff", highlightthickness=2,width=300)
             time_lbl = Label(frame,text = msg.time_str,font=("Arial",12),bg = color)
-            sent_in_btn = Button(frame,text = f"Room/{msg.sent_in.name}", font=("Arial",12,font.ITALIC,font.BOLD),borderwidth=0,bg = color,command=partial(self.in_chat_screen,msg.sent_in))
+            sent_in_btn = Button(frame,text = f"Room/{msg.sent_in.name}", font=("Arial",12,font.ITALIC,font.BOLD),borderwidth=0,bg = color,command=partial(self.manage_join_room_by_id,msg.sent_in.room_id))
             if(len(msg.title)>50):
                 actual_title = msg.title[:50] + f"... By {msg.sent_by}"
             else:
@@ -205,9 +206,9 @@ class ui_reddit:
             expand_btn.pack(side=BOTTOM,anchor=E,pady=5,padx=3)
         
 
-            if msg.img_name!="no":
+            if msg.img_name!="":
                 try:
-                    self.chat_img_lst.append(PhotoImage(file=msg.img_name))
+                    self.chat_img_lst.append(ImageTk.PhotoImage(Image.open(f"pictures\\{msg.img_name}")))
                     img_lbl = Label(frame,image=self.chat_img_lst[self.chat_img_lst_index],bg = color)
                     img_lbl.pack(side=TOP,anchor=W)
                     self.chat_img_lst_index+=1                 
@@ -254,6 +255,10 @@ class ui_reddit:
         user_stats_frame = self.user_stats(chatroom,packing_frame)
         user_stats_frame.pack(side=TOP,anchor=W,pady=5)
         packing_frame.pack(side=LEFT,anchor=N,pady=10)
+
+        self.add_msg_img = PhotoImage(file="program_pics\\add (1).png")
+        add_btn = Button(canvas,image=self.add_msg_img,borderwidth=0,command=lambda:self.get_new_msg_info(chatroom))
+        add_btn.pack(side=BOTTOM,anchor=E)
 
         frame_lst = self.make_frame_chat_list(chatroom.msgs,second_frame)
         for frame in frame_lst:
@@ -320,7 +325,7 @@ class ui_reddit:
         right_frame = Frame(self.root,bg="white")
 
         #left frame
-        self.pic = PhotoImage(file='logo.png')
+        self.pic = PhotoImage(file='program_pics\\logo.png')
         btn = Button(left_frame,image=self.pic,borderwidth=0,command=self.easter_egg)
 
         msg1 = Label(left_frame,text="Welcome to the coolest reddit clone",font=("arial",15,font.BOLD),bg="#6666ff",fg="white")
@@ -379,7 +384,7 @@ class ui_reddit:
         right_frame = Frame(self.root,bg="white")
 
         #left frame
-        self.pic = PhotoImage(file='logo.png')
+        self.pic = PhotoImage(file='program_pics\\logo.png')
         btn = Button(left_frame,image=self.pic,borderwidth=0,command=self.easter_egg)
 
         msg1 = Label(left_frame,text="Welcome to the coolest reddit clone",font=("arial",15,font.BOLD),bg="#6666ff",fg="white")
@@ -476,7 +481,7 @@ class ui_reddit:
         frame = Frame(container_frame)
         msg_lbl = Label(frame,text="User Options:",font=("Arial",15,font.BOLD))
         change_password_btn = Button(frame,text="Change password",command=self.Do,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
-        join_room_by_id_btn = Button(frame,text="Join room by ID",command=self.Do,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
+        join_room_by_id_btn = Button(frame,text="Join room by ID",command=self.join_room_by_id_window,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
         create_chat_room_btn = Button(frame,text="Create New Room",command=self.create_chatroom,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
         
         msg_lbl.pack(side=TOP)
@@ -495,13 +500,38 @@ class ui_reddit:
         search_bar_entry.pack(side=LEFT,padx=10)
         search_btn.pack(side=LEFT,padx=10,pady=10)
         return frame
+    
+    def join_room_by_id_window(self):
+        top_level = Toplevel()
+
+        msg_lbl = Label(top_level,text="Enter the ID of the room you wish to enter")
+        id_entry = Entry(top_level)
+        submit_btn = Button(top_level,text="Join!",command=lambda:self.manage_join_room_by_id(id_entry.get(),top_level))
+        msg_lbl.pack()
+        id_entry.pack()
+        submit_btn.pack()
+    
+    def manage_join_room_by_id(self,id_num,top_level):
+        try:
+            tmp = int(id_num)
+        except:
+            messagebox.showerror(title = "wrong ID",message="ID has to be a number")
+            return
+
+        chat_room = self.user_controller.get_room_by_id(id_num,self.user.name)
+
+        if not isinstance(chat_room,chatroom):
+            messagebox.showerror(title="ID not found",message="the ID you entered had no matching results")
+        else:
+            self.in_chat_screen(chat_room)
+            top_level.destroy()
 
     #in chat screen function group
     def user_stats(self,chatroom,containter_frame:Frame):
         frame = Frame(containter_frame)
         msg_lbl = Label(frame,text="Room Info:",font=("Arial",10))
         created_by_lbl = Label(frame,text=f"This room was created by {chatroom.creator.name}",font=("Arial",10))
-        members_lbl = Label(frame,text=f"This room has {len(chatroom.members)} members",font=("Arial",10))
+        members_lbl = Label(frame,text=f"This room has {chatroom.current_members} members",font=("Arial",10))
         admins_lbl = Label(frame,text=f"This room has {len(chatroom.admins_list)} admins",font=("Arial",10))
 
         msg_lbl.pack(side=TOP,pady=10,anchor=W)
@@ -510,7 +540,47 @@ class ui_reddit:
         admins_lbl.pack(side=TOP,pady=10,anchor=W)
 
         return frame
+    
+    def get_new_msg_info(self,chat_room:chatroom):
+        print('yo')
+        top_level = Toplevel()
+        self.filename = ""
+        title_lbl = Label(top_level,text="Enter the title of your post:")
+        title_entry = Entry(top_level)
 
+        msg_lbl = Label(top_level,text="Enter the text of your post:")
+        msg_entry = Entry(top_level,width=70)
+        print("yoyo?")
+        add_img_btn = Button(top_level,text="Add Image",command=self.select_img_for_message)
+
+        create_btn = Button(top_level,text="Create!",command=lambda :self.check_new_msg_fields(self.user.name,msg_entry.get(),
+        chat_room,self.filename,title_entry.get()))
+
+        title_lbl.grid(row=0,column=0,pady=10)
+        title_entry.grid(row=0,column=1,pady=10)
+        msg_lbl.grid(row=1,column=0,pady=10)
+        msg_entry.grid(row=1,column=1,pady=10)
+        create_btn.grid(row=2,column=0,pady=10)
+        add_img_btn.grid(row=2,column=1,pady=10)
+
+
+    def select_img_for_message(self):
+        self.filename = filedialog.askopenfilename(filetypes=[('image files', '.png'), ('image files', '.jpg')], )
+
+    def check_new_msg_fields(self,name,msg,chat_room,img_name,title):
+        img_and_path = img_name
+        img_name = img_name[img_name.rfind("/")+1:]
+        if img_name.count(".") > 1:
+            messagebox.showerror(title="problem with the image",message="the image you selected has a dot in its name which is not allowed")
+            return
+        width,height = Image.open(img_and_path).size()
+        if width > 250:
+            messagebox.showerror(title="image's width is too big",message="Sorry but this application does not suport images with a width above 250 px")
+            return
+        if height > 300:
+            messagebox.showerror(title="image's height is too big",message="Sorry but this application does not suport images with a height above 300 px")
+            return
+        
 
 rot = Tk()
 
