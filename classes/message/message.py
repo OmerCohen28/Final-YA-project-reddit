@@ -11,7 +11,7 @@ class message:
         self.msg = msg
         self.sent_in = sent_in
         x = datetime.datetime.now()
-        self.time_str = f"{x.day}/{x.month} {x.hour}:{x.minute}"
+        self.time_str = f"{x.day}/{x.month}/{x.year} {x.hour}:{x.minute}"
         self.img_name = img_name
         self.title = title
 

@@ -103,6 +103,7 @@ class server:
             read,write,eror = select(lst,[],[],0)
             for sockobj in read:
                 print("again")
+                print(f"dict: {self.current_user_chat_room_dict}")
                 if sockobj==self.conn_sock:
                     client_sock,address = self.conn_sock.accept()
                     self.all_sockets.append(client_sock)
@@ -197,22 +198,28 @@ class server:
         id_num = pickle.loads(sock.recv(1054))
         print(id_num)
         chat_room = self.db_conn.get_chat(id_num)
-        chat_room.current_members = self.get_how_many_members_are_online_to_a_room(id_num)
-        sock.send(pickle.dumps(chat_room))
+        sock.send(pickle.dumps('ok'))
         name = pickle.loads(sock.recv(1054))
         self.current_user_chat_room_dict[name] = id_num
         sock.send(pickle.dumps("ok"))
+        try:
+            chat_room.current_members = self.get_how_many_members_are_online_to_a_room(id_num)
+        except AttributeError:
+            sock.send(pickle.dumps("no chatroom"))
+            return
+        sock.send(pickle.dumps(chat_room))
         msg = pickle.loads(sock.recv(1054))
         if msg == "no need":
+            print("yeh")
             return
         sock.send(pickle.dumps("need what?"))
         need = pickle.loads(sock.recv(1054))
-
+        print(need)
         for img_name in need:
             self.send_picture(sock,img_name)
     
     def get_how_many_members_are_online_to_a_room(self,id_num):
-        count=1
+        count=0
         for key in self.current_user_chat_room_dict:
             if self.current_user_chat_room_dict[key] == id_num:
                 count+=1
@@ -248,9 +255,10 @@ class server:
         sock.send(pickle.dumps("ok"))
         if new_msg.img_name != "":   
             if exists(f"server_pics\\{new_msg.img_name}"):
-                new_msg.img_name = new_msg.img_name[:new_msg.img_name.rfind(".")]
+                extension_name = new_msg.img_name[new_msg.img_name.find(".")+1:]
+                new_msg.img_name = new_msg.img_name[:new_msg.img_name.find(".")]+f'1.{extension_name}'
             self.get_picture_and_save(sock,new_msg.img_name)
-
+        print(new_msg.img_name)
         chat_room = new_msg.sent_in
         chat_room.msgs.append(new_msg)
         self.db_conn.insert_chat(chat_room.room_id,chat_room)
