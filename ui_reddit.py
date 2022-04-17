@@ -11,9 +11,9 @@ from classes.message.message import message
 from classes.user.user import User
 from user_controller import user_controller
 import time
+import _thread
 
 class ui_reddit:
-
     def __init__(self,root:Tk):
         self.root = root
         self.root.protocol("WM_DELETE_WINDOW",self.handle_close)
@@ -24,8 +24,19 @@ class ui_reddit:
         self.chat_img_lst_index=0
         self.expand_msg_img_lst = []
         self.expand_msg_ing_lst_index=0
+        self.current_chat_id = 0
+
 
     #general purpose functions
+    def refresh_chat_room(self):
+        while True:
+            time.sleep(2)
+            if not self.user_controller.in_process:
+                self.user_controller.get_current_waiting_msg()
+            if self.user_controller.refresh:
+                print("need refresh")
+                self.refresh_btn.pack(side=TOP,anchor=E)
+                self.user_controller.refresh = False
 
     def clear_screen(self) ->None:
         for widget in self.root.winfo_children():
@@ -90,10 +101,10 @@ class ui_reddit:
         title_lbl.pack(side=TOP,pady=10)
 
         info_frame = Frame(msg_frame,highlightbackground="#0066ff", highlightthickness=2,bg="white",width=100)
-        room_lbl = Label(info_frame,text=f"Room/{msg.sent_in.name}",font=("Arial",15),bg="white")
+        room_btn = Button(info_frame,text=f"Room/{msg.sent_in.name}",font=("Arial",15),bg="white",command=lambda:self.manage_join_room_by_id(msg.sent_in.room_id))
         created_by_lbl = Label(info_frame,text=f"Created by {msg.sent_by}",font=("Arial",15),bg="white")
         created_on_lbl = Label(info_frame,text=f"Created on {msg.time_str}",font=("Arial",15),bg="white")
-        room_lbl.pack(side=TOP,anchor=W,pady=10,padx=5)
+        room_btn.pack(side=TOP,anchor=W,pady=10,padx=5)
         created_by_lbl.pack(side=TOP,anchor=W,pady=10,padx=5)
         created_on_lbl.pack(side=TOP,anchor=W,pady=10,padx=5)
         info_frame.pack(side=TOP,pady=10)
@@ -189,7 +200,7 @@ class ui_reddit:
         
 
         create_btn = Button(toplevel,text="Create Room!", command=lambda:self.mange_creating_new_room(chat_name_entry.get(),topics_entry.get(),banned_words_entry.get(),toplevel))
-
+        create_btn.pack(anchor=W,padx=20)
 
     def mange_creating_new_room(self,name,topics,banned_words,toplevel):
         print(name)
@@ -269,6 +280,11 @@ class ui_reddit:
     '''
 
     def in_chat_screen(self,chatroom:chatroom):
+        try:
+            self.refresh_btn.pack_forget()
+        except:
+            pass   
+        self.current_chat_id = chatroom.room_id
         self.clear_screen()
         self.root.geometry("1150x800")
         self.root.configure(bg="white")
@@ -305,8 +321,11 @@ class ui_reddit:
         packing_frame.pack(side=LEFT,anchor=N,pady=10,fill=Y)
 
         self.add_msg_img = PhotoImage(file="program_pics\\add (1).png")
-        add_btn = Button(canvas,image=self.add_msg_img,borderwidth=0,command=lambda:self.get_new_msg_info(chatroom))
+        add_btn = Button(canvas,image=self.add_msg_img,borderwidth=0,command=lambda:self.get_new_msg_info(chatroom),bg="white")
         add_btn.pack(side=BOTTOM,anchor=E)
+
+        self.refresh_img = PhotoImage(file="program_pics\\circular-left-arrow (1).png")
+        self.refresh_btn = Button(canvas,image=self.refresh_img,borderwidth=0,command=lambda:self.manage_join_room_by_id(self.current_chat_id),bg="white")      
 
 
 
@@ -499,7 +518,9 @@ class ui_reddit:
         pass
 
     def send_log_in_info(self):
-        msg,user = self.user_controller.log_in(self.name_entry_log_in.get(),self.password_entry_log_in.get())
+        msg = self.user_controller.log_in(self.name_entry_log_in.get(),self.password_entry_log_in.get())
+        print(msg)
+        msg,user = msg[0],msg[1]
         if(msg == "no username"):
             messagebox.showerror(title="Log in failed",message="The username you enterd was inccorect, try again")     
         elif(msg=="password is inccorect"):
@@ -628,13 +649,16 @@ class ui_reddit:
         if img_name.count(".") > 1:
             messagebox.showerror(title="problem with the image",message="the image you selected has a dot in its name which is not allowed")
             return
-        width,height = Image.open(img_and_path).size
-        if width > 300:
-            messagebox.showerror(title="image's width is too big",message="Sorry but this application does not suport images with a width above 250 px")
-            return
-        if height > 300:
-            messagebox.showerror(title="image's height is too big",message="Sorry but this application does not suport images with a height above 300 px")
-            return
+        try:
+            width,height = Image.open(img_and_path).size
+            if width > 300:
+                messagebox.showerror(title="image's width is too big",message="Sorry but this application does not suport images with a width above 250 px")
+                return
+            if height > 300:
+                messagebox.showerror(title="image's height is too big",message="Sorry but this application does not suport images with a height above 300 px")
+                return
+        except AttributeError:
+            pass
         if len(title) > 60:
             messagebox.showerror(title="title is too long",message="the title is not allowed to be over 60 chars")
             return
@@ -647,5 +671,7 @@ rot = Tk()
 ui = ui_reddit(rot)
 
 ui.log_in_screen()
+_thread.start_new_thread(ui.refresh_chat_room,())
+
 
 rot.mainloop()

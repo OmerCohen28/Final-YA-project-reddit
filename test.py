@@ -12,6 +12,8 @@ mainloop()'''
 
 import datetime
 from distutils import extension
+import keyword
+from socket import AF_INET, SOCK_STREAM,socket
 from tkinter import  *
 from tkinter import filedialog
 from PIL import ImageTk,Image
@@ -20,6 +22,9 @@ import pickle
 from os.path import exists
 from redis import *
 from classes.chatroom.chatroom import chatroom
+import select
+import rake_nltk
+import nltk
 #filename = filedialog.askopenfilename(filetypes=[('image files', '.png'), ('image files', '.jpg')], )
 #print(filename)
 
@@ -31,22 +36,14 @@ from classes.chatroom.chatroom import chatroom
 
 from tkinter import Frame, Tk
 
-class MyApp():
-    def __init__(self):
-        self.root = Tk()
-        self.root.geometry("600x600")
-        s=""
-        for i in range(53):
-            s+="x"
-        lbl1 = Label(text=s,font=("Arial",12))
-        lbl1.pack()
-        lbl2 = Label(text="",bg="red",width=53)
-        lbl2.pack()
-        self.root.mainloop()
 
-if __name__ == '__main__':
-    app = MyApp()
+s = "my name is omer and im here to say that omer is the omer of the omers"
+r = rake_nltk.Rake("stop.txt")
 
+def sort_tuple(tup:tuple):
+    tup.sort(key = lambda x:x[1])
+    return tup
 
-
-
+r.extract_keywords_from_text(s)
+x = r.get_word_degrees()
+print(x)

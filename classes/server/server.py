@@ -7,6 +7,7 @@ from select import select
 import pickle
 from os.path import exists
 import time
+import rake_nltk
 
 class server:
     curr_chat_id =0 #since the server gives the chat id, i created a class variable
@@ -20,7 +21,9 @@ class server:
         self.all_sockets = [self.conn_sock]
         self.db_conn = db_conn
         self.current_user_chat_room_dict = {}
+        self.current_user_socket_dict = {}
         self.initialize_server_core_vars()
+        self.rake_obj = rake_nltk.Rake('stop.txt')
 
 
     def initialize_server_core_vars(self):
@@ -33,6 +36,24 @@ class server:
         if self.chat_name_to_id_dict is None:
             self.chat_name_to_id_dict = {}
             self.db_conn.set_current_chat_name_to_id_dict({})
+
+            
+    def get_all_words_from_chats(self):
+        id_text_dict = {}
+        for id_num in range(self.curr_chat_id):
+            text = ""
+            chat_room = self.db_conn.get_chat(id_num)
+            for msg in chat_room.msgs:
+                text+= f". {msg}"
+            id_text_dict[id_num] = text
+        return id_text_dict
+
+    def clac_the_score_of_a_word_in_chat(self,id_num:int,word:str)->int:
+        id_text_dict = self.get_all_words_from_chats()
+        text = id_text_dict[id_num]
+        self.rake_obj.extract_keywords_from_text()
+        word_score_dict = self.rake_obj.get_word_frequency_distribution()
+        return word_score_dict[word]
 
     '''
     This function is the main function that should be used to create new users, it updates the user id 
@@ -176,6 +197,7 @@ class server:
                 return
             if(password == check.password):
                 sock.send(pickle.dumps(('ok',check)))
+                self.current_user_socket_dict[name] = sock
                 return
             sock.send(pickle.dumps(("password is inccorect","")))
 
@@ -202,12 +224,17 @@ class server:
         name = pickle.loads(sock.recv(1054))
         self.current_user_chat_room_dict[name] = id_num
         sock.send(pickle.dumps("ok"))
+        print(id_num)
         try:
             chat_room.current_members = self.get_how_many_members_are_online_to_a_room(id_num)
         except AttributeError:
             sock.send(pickle.dumps("no chatroom"))
+            print('no chatroom')
             return
         sock.send(pickle.dumps(chat_room))
+        print('sent chatroom')
+        time.sleep(1)
+        sock.send("stop".encode())
         msg = pickle.loads(sock.recv(1054))
         if msg == "no need":
             print("yeh")
@@ -262,10 +289,17 @@ class server:
         chat_room = new_msg.sent_in
         chat_room.msgs.append(new_msg)
         self.db_conn.insert_chat(chat_room.room_id,chat_room)
+        self.notify_all_members_of_chatroom_for_new_msg(chat_room)
 
     def notify_all_members_of_chatroom_for_new_msg(self,chat_room):
-        pass
-        #goodluck bitch, luv u
+        print('in refresh function')
+        print(self.current_user_chat_room_dict)
+        print(self.current_user_socket_dict)
+        for name in self.current_user_chat_room_dict:
+            if self.current_user_chat_room_dict[name] == str(chat_room.room_id):
+                sock = self.current_user_socket_dict[name]
+                print('sent refresh msg')
+                sock.send(pickle.dumps('need refresh'))
         
         
         

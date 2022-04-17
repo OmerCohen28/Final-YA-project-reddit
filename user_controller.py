@@ -7,6 +7,7 @@ from classes.message.message import message
 import random
 import time
 from os.path import exists
+from select import select
 class user_controller:
     def __init__(self):
         while True:
@@ -20,35 +21,73 @@ class user_controller:
                 break
             except:
                 pass
+        self.refresh = False
+        self.in_process = False
 
     def close_connection(self,name):
+        self.in_process = True
         self.sock.send(pickle.dumps("leaving"))
-        who_leaves = pickle.loads(self.sock.recv(1054))
+        who_leaves = self.get_current_waiting_msg()
         print(who_leaves)
         self.sock.send(pickle.dumps(name))
         self.sock.close()
 
+    def get_current_waiting_msg(self):
+        try:
+            read,write,eror = select([self.sock],[],[],1)
+            msg = pickle.loads(read[0].recv(1054))
+        except:
+            try:
+                return msg
+            except:
+                return None
+        if msg != "need refresh":
+            return msg 
+        self.refresh = True
+
+    def get_large_data(self):
+        self.in_process = True
+        data = b""
+        print('getting large data')
+        while True:
+            packet = self.sock.recv(1054)
+            if packet == "stop".encode():
+                break
+            data+=packet
+        msg = pickle.loads(data)
+        self.in_process = False
+        return msg
+
 
     def sign_up(self,name,password,is_sys_admin):
+        self.in_process = True
         #if there is a problem with the IP recognition it lies here
         msgs = ['new user',name,password,is_sys_admin]
         for msg in msgs:
             self.sock.send(pickle.dumps(msg))
-            new_msg = pickle.loads(self.sock.recv(1054))
+            new_msg = self.get_current_waiting_msg()
         self.sock.send(pickle.dumps('done'))
-        is_ok = pickle.loads(self.sock.recv(1054))
+        is_ok = self.get_current_waiting_msg()
+        self.in_process = False
         return is_ok
     
     def log_in(self,name:str,password:str) ->bool:
+        self.in_process = True
         msgs = ['log in',name,password]
         for msg in msgs:
+            print('sending')
             self.sock.send(pickle.dumps(msg))
-            new_msg = pickle.loads(self.sock.recv(1054))
+            print('sent')
+            print(msg)
+            new_msg = self.get_current_waiting_msg()
         self.sock.send(pickle.dumps('done'))
-        msg = pickle.loads(self.sock.recv(1054))
+        msg = self.get_current_waiting_msg()
+        self.in_process = False
         return msg
 
     def get_msgs_for_main_menu(self):
+        self.in_process = True
+        self.in_process = False
         return msgs
 
     def create_new_room_with_server(self,creator:User,name:str,topics,banned_words) -> bool:
@@ -57,40 +96,53 @@ class user_controller:
         new_chat = chatroom(creator,name,topics,id_num,banned_words)
         if not self.check_if_room_name_exists(name):
             self.sock.send(pickle.dumps("new room"))
-            self.sock.recv(1054)
+            self.get_current_waiting_msg()
             self.sock.send(pickle.dumps(new_chat))
-            return pickle.loads(self.sock.recv(1054))
+            self.in_process = False
+            return self.get_current_waiting_msg()
+        self.in_process = False
         return False
 
     def get_new_room_id_from_server(self):
+        self.in_process = True
         print("getting new id")
         self.sock.send(pickle.dumps("need chat id"))
-        new_id = int(pickle.loads(self.sock.recv(1054)))
+        new_id = int(self.get_current_waiting_msg())
         print(new_id)
+        self.in_process = False
         return new_id
 
     def check_if_room_name_exists(self,name:str) ->bool:
+        self.in_process = True
         print("checking if exists")
         self.sock.send(pickle.dumps("is exist"))
-        tmp = self.sock.recv(1054)
+        tmp = self.get_current_waiting_msg()
         print(tmp)
         self.sock.send(pickle.dumps(name))
         print('sent')
-        result = pickle.loads(self.sock.recv(1054))
+        result = self.get_current_waiting_msg()
         print(result)
+        self.in_process = False
         return result
     
     def get_room_by_id(self,id_num:int,name:str) ->chatroom:
+        self.in_process = True
         self.sock.send(pickle.dumps("get room by id"))
-        msg = pickle.loads(self.sock.recv(1054))
+        msg = self.get_current_waiting_msg()
         print(msg)
         self.sock.send(pickle.dumps(id_num))
-        ok_msg = pickle.loads(self.sock.recv(1054))
-        self.sock.send(pickle.dumps(name))
-        ok_msg = pickle.loads(self.sock.recv(1054))
+        print('sent id')
+        ok_msg = self.get_current_waiting_msg()
         print(ok_msg)
-        chat_room = pickle.loads(self.sock.recv(1054))
+        self.sock.send(pickle.dumps(name))
+        print('sent name')
+        ok_msg = self.get_current_waiting_msg()
+        print(ok_msg)
+        chat_room = self.get_large_data()
         if not isinstance(chat_room,chatroom):
+            print(chat_room)
+            print(type(chat_room))
+            self.in_process = False
             return False
         need_imgs_names = []
         for msg in chat_room.msgs:
@@ -98,7 +150,8 @@ class user_controller:
                 need_imgs_names.append(msg.img_name)
         if len(need_imgs_names) > 0:
             self.sock.send(pickle.dumps("need"))
-            need_what = pickle.loads(self.sock.recv(1054))
+            print('sent need')
+            need_what = self.get_current_waiting_msg()
             print(need_what)
             self.sock.send(pickle.dumps(need_imgs_names))
 
@@ -106,40 +159,45 @@ class user_controller:
                 self.get_picture_and_save(img_name)
         else:
             self.sock.send(pickle.dumps("no need"))
+            print('sent no need')
 
-
+        self.in_process = False
         return chat_room
     
     def create_message_and_sent_to_server(self,name:str,msg:str,chat_room:chatroom,img_path_and_name:str,title:str):
+        self.in_process = True
         if img_path_and_name != "":
             img_name = img_path_and_name[img_path_and_name.rfind("/")+1:]
         else:
             img_name = ""
         new_msg = message(name,msg,chat_room,img_name,title)
         self.sock.send(pickle.dumps("new msg"))
-        send_msg = pickle.loads(self.sock.recv(1054))
+        send_msg = self.get_current_waiting_msg()
         print(send_msg)
         self.sock.send(pickle.dumps(new_msg))
         time.sleep(0.5)
         self.sock.send("stop".encode())
-        ok_msg = pickle.loads(self.sock.recv(1054))
+        ok_msg = self.get_current_waiting_msg()
         print(ok_msg)
         if img_name != "":
             with open(img_path_and_name,'rb') as img:
                 self.sock.send(img.read())
                 time.sleep(0.5)
                 self.sock.send("stop".encode())
+        self.in_process = False
 
                 
     def get_picture_and_save(self,img_name:str):
-            img = b""
-            while True:
-                packet = self.sock.recv(1054)
-                if packet == "stop".encode():
-                    break
-                img+=packet
-            with open(f"pictures\\{img_name}",'wb') as new_img:
-                new_img.write(img)
+        self.in_process = True
+        img = b""
+        while True:
+            packet = self.sock.recv(1054)
+            if packet == "stop".encode():
+                break
+            img+=packet
+        with open(f"pictures\\{img_name}",'wb') as new_img:
+            new_img.write(img)
+        self.in_process = False
 
     @staticmethod
     def get_open_port():
@@ -160,7 +218,6 @@ class user_controller:
         return starting_port-rand_num
 
 use = User("ayal","123",False)
-
 chat = chatroom(use,"Omer's WonderLand",[],1,[])                    
 chat2 = chatroom(use,"Omer's WonderLand 2nd edition",[],2,[])
 msg1 = message("omer","wow this works!!",chat,"user.png","Please work")
