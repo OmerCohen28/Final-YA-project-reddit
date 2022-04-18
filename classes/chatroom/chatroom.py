@@ -9,6 +9,7 @@ class chatroom:
         self.topcis = topcis
         self.admins_list = [creator]
         self.current_members = 0
+        self.members = [creator]
         #self.create_time #add a way to know when it was created
         self.room_id = room_id
         self.common_words = []

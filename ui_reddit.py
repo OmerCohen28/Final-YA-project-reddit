@@ -1,3 +1,4 @@
+from cmath import phase
 from functools import partial
 from re import I
 from tkinter import *
@@ -163,7 +164,7 @@ class ui_reddit:
     def create_chatroom(self):
         toplevel = Toplevel(bg="white")
         toplevel.grab_set()
-        toplevel.geometry("450x250")
+        toplevel.geometry("450x300")
         title_frame = Frame(toplevel,bg="#6666ff")
         title_msg_lbl = Label(title_frame,bg="#6666ff",fg="white",text="Create New Room",font=("Arial",20,font.BOLD))
         title_msg_lbl.pack(padx=50)
@@ -199,8 +200,8 @@ class ui_reddit:
 
         
 
-        create_btn = Button(toplevel,text="Create Room!", command=lambda:self.mange_creating_new_room(chat_name_entry.get(),topics_entry.get(),banned_words_entry.get(),toplevel))
-        create_btn.pack(anchor=W,padx=20)
+        create_btn = Button(toplevel,text="Create Room!",bg = "white",font=("Arial",15), command=lambda:self.mange_creating_new_room(chat_name_entry.get(),topics_entry.get(),banned_words_entry.get(),toplevel))
+        create_btn.pack(anchor=W,padx=20,pady=10)
 
     def mange_creating_new_room(self,name,topics,banned_words,toplevel):
         print(name)
@@ -274,9 +275,9 @@ class ui_reddit:
     - log_in_screen()
     - sign_up_screen()
     - in_chat_screen()
-    - comment_section_screen()
+    - search_results()
 
-    all other functions are supportive functions of these 4 main ones
+    all other functions are supportive functions of these 5 main ones
     '''
 
     def in_chat_screen(self,chatroom:chatroom):
@@ -505,11 +506,8 @@ class ui_reddit:
         right_frame.pack(side=RIGHT,expand=TRUE,fill=BOTH)
 
 
-
-    #screen after clicking on a message, maybe open a whole new screen or maybe change the current one
-    #shows comments on a message
-    def comment_section_screen(self):
-        pass 
+    def search_results(self):
+        pass
 
 
     #log in/sign up function group
@@ -573,14 +571,14 @@ class ui_reddit:
         return frame
     
     def join_room_by_id_window(self):
-        top_level = Toplevel()
+        top_level = Toplevel(bg="white")
         top_level.attributes('-topmost', True)
-        msg_lbl = Label(top_level,text="Enter the ID of the room you wish to enter")
-        id_entry = Entry(top_level)
-        submit_btn = Button(top_level,text="Join!",command=lambda:self.manage_join_room_by_id(id_entry.get(),top_level))
-        msg_lbl.pack()
+        msg_lbl = Label(top_level,text="Join Room by ID",bg="#6666ff",fg="white",font=("Arial",15))
+        id_entry = Entry(top_level,width=20,highlightbackground="#0066ff", highlightthickness=2)
+        submit_btn = Button(top_level,text="Join!",bg="white",command=lambda:self.manage_join_room_by_id(id_entry.get(),top_level))
+        msg_lbl.pack(padx=20,pady=10,fill=X)
         id_entry.pack()
-        submit_btn.pack()
+        submit_btn.pack(pady=10)
     
     def manage_join_room_by_id(self,id_num,*top_level):
         try:
@@ -664,7 +662,41 @@ class ui_reddit:
             return
         self.user_controller.create_message_and_sent_to_server(name,msg,chat_room,img_and_path,title)
         top_level.destroy()
-        
+
+    #search results function group
+
+    def check_search_phrase(self,phrase:str):
+        if phrase == "":
+            return False
+        if phrase.count(" ") > 0:
+            return "phrase"
+        return "word"
+    
+    def make_frame_lst_of_chat_rooms(self,lst:list[(chatroom,int)],container_frame:Frame):
+        result = []
+        count=0
+        for chat_room,score in lst:
+            if count % 2 == 0:
+                color ="#C8C8C8"
+            else:
+                color = "#F0F0F0"
+
+            frame = Frame(container_frame,bg = color,highlightbackground="#0066ff", highlightthickness=2,width=300)
+            
+            room_btn = Button(frame,text=f"Room/{chat_room.name}",font=("Arial",15),bg=color,command=partial(self.manage_join_room_by_id,chat_room.room_id))
+            members_joined_lbl = Label(frame,text = f"{len(chat_room.members)} members",font=("Arial",15),bg=color)
+            admins_lbl = Label(frame,text=f"{len(chat_room.admins_list)} admins",font=("Arial",15),bg=color)
+            score_lbl = Label(frame,text=f"{score} match",font=("Arial",15),bg=color)
+            go_to_room_btn = Button(frame,text="go to room",font=("Arial",15),bg=color,command=partial(self.manage_join_room_by_id,chat_room.room_id))
+
+            room_btn.grid(row=0,column=0,pady=10,padx=20)
+            members_joined_lbl.grid(row=1,column=0,pady=10)
+            admins_lbl.grid(row=2,column=0,pady=10,padx=20)
+            score_lbl.grid(row=0,column=1,pady=10,padx=20)
+            go_to_room_btn.grid(row=2,column=1,pady=10,padx=20)
+
+            result.append(frame)
+        return result
 
 rot = Tk()
 

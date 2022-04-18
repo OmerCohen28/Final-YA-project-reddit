@@ -40,10 +40,6 @@ from tkinter import Frame, Tk
 s = "my name is omer and im here to say that omer is the omer of the omers"
 r = rake_nltk.Rake("stop.txt")
 
-def sort_tuple(tup:tuple):
-    tup.sort(key = lambda x:x[1])
-    return tup
 
-r.extract_keywords_from_text(s)
-x = r.get_word_degrees()
-print(x)
+lst = [1,2,3]
+print(type(lst))

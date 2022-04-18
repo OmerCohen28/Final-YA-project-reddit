@@ -36,8 +36,7 @@ class server:
         if self.chat_name_to_id_dict is None:
             self.chat_name_to_id_dict = {}
             self.db_conn.set_current_chat_name_to_id_dict({})
-
-            
+           
     def get_all_words_from_chats(self):
         id_text_dict = {}
         for id_num in range(self.curr_chat_id):
@@ -48,11 +47,19 @@ class server:
             id_text_dict[id_num] = text
         return id_text_dict
 
+    def get_word_score_dict_for_chat_room(self,id_num) ->dict:
+        id_text_dict = self.get_all_words_from_chats()
+        text = id_text_dict[id_num]
+        self.rake_obj.extract_keywords_from_text(text)
+        word_score_dict = self.rake_obj.get_word_degrees()
+        return word_score_dict
+
+
     def clac_the_score_of_a_word_in_chat(self,id_num:int,word:str)->int:
         id_text_dict = self.get_all_words_from_chats()
         text = id_text_dict[id_num]
-        self.rake_obj.extract_keywords_from_text()
-        word_score_dict = self.rake_obj.get_word_frequency_distribution()
+        self.rake_obj.extract_keywords_from_text(text)
+        word_score_dict = self.rake_obj.get_word_degrees()
         return word_score_dict[word]
 
     '''
