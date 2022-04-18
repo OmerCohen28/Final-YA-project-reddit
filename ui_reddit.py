@@ -506,8 +506,35 @@ class ui_reddit:
         right_frame.pack(side=RIGHT,expand=TRUE,fill=BOTH)
 
 
-    def search_results(self):
-        pass
+    def search_keyword(self,keyword:str):
+        self.clear_screen()
+        self.root.configure(bg="white")
+        top_frame = self.create_top_frame()
+        top_frame.config(height=350)
+        top_frame.pack(side=TOP,fill=X)
+
+        #creating scrolling chat screen
+        main_frame = Frame(self.root)
+        canvas = Canvas(main_frame,width="10")
+        scroll_bar = Scrollbar(main_frame,orient=VERTICAL,command=canvas.yview)
+        canvas.configure(yscrollcommand=scroll_bar.set)
+        canvas.bind("<Configure>",lambda event: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.bind_all("<MouseWheel>",lambda e:self.on_mousewheel(e,canvas))
+        second_frame = Frame(canvas)
+        canvas.create_window((225,0),window=second_frame,anchor=NW)
+
+
+        result_dict = self.user_controller.send_and_recv_search_results(keyword)
+
+        result_lst = []
+        for key in result_dict:
+            result_lst.append((key,result_dict[key]))
+        
+        frame_lst = self.make_frame_lst_of_chat_rooms(result_lst,second_frame)
+
+        for frame in frame_lst:
+            frame.pack(side=BOTTOM,fill=X,pady=10,expand=TRUE)
+
 
 
     #log in/sign up function group
@@ -564,7 +591,7 @@ class ui_reddit:
 
         search_bar_entry = Entry(frame,font=("Arial",15),highlightbackground="#0066ff", highlightthickness=2,width=50)
 
-        search_btn = Button(frame,text="Search Room",font=("Arial",10,font.BOLD),highlightbackground="black", highlightthickness=2,bg="#0066ff",fg="white")
+        search_btn = Button(frame,text="Search Room",font=("Arial",10,font.BOLD),highlightbackground="black", highlightthickness=2,bg="#0066ff",fg="white",command=lambda:self.check_search_phrase(search_bar_entry.get()))
 
         search_bar_entry.pack(side=LEFT,padx=10)
         search_btn.pack(side=LEFT,padx=10,pady=10)
@@ -606,16 +633,17 @@ class ui_reddit:
         frame = Frame(containter_frame,bg="white")
         msg_lbl = Label(frame,text="Room Info:",font=("Arial",15),bg="white")
         created_by_lbl = Label(frame,text=f"Created by {chatroom.creator.name}",font=("Arial",15),bg="white")
-        admins_lbl = Label(frame,text=f"{len(chatroom.admins_list)} admins",font=("Arial",15),bg="white")
 
         msg_lbl.pack(side=TOP,pady=10,anchor=W)
         created_by_lbl.pack(side=TOP,pady=10,anchor=W)
-        admins_lbl.pack(side=TOP,pady=10,anchor=W)
 
         return frame
     
     def get_new_msg_info(self,chat_room:chatroom):
         print('yo')
+        if self.user_controller.refresh:
+            messagebox.showerror(title="can not add a message",message="you need to refresh before adding another message")
+            return
         top_level = Toplevel()
         top_level.attributes('-topmost', True)
         self.filename = ""
@@ -667,11 +695,13 @@ class ui_reddit:
 
     def check_search_phrase(self,phrase:str):
         if phrase == "":
-            return False
+            messagebox.showerror(title="blank search",message="You have to input a keyword to search for")
+            return
         if phrase.count(" ") > 0:
-            return "phrase"
-        return "word"
-    
+            messagebox.showerror(title="can not search for a phrase",message="You were trying to search for a phrase,unfortunately you can only search a keyword")
+            return
+        self.search_keyword(phrase)
+
     def make_frame_lst_of_chat_rooms(self,lst:list[(chatroom,int)],container_frame:Frame):
         result = []
         count=0
@@ -685,13 +715,11 @@ class ui_reddit:
             
             room_btn = Button(frame,text=f"Room/{chat_room.name}",font=("Arial",15),bg=color,command=partial(self.manage_join_room_by_id,chat_room.room_id))
             members_joined_lbl = Label(frame,text = f"{len(chat_room.members)} members",font=("Arial",15),bg=color)
-            admins_lbl = Label(frame,text=f"{len(chat_room.admins_list)} admins",font=("Arial",15),bg=color)
             score_lbl = Label(frame,text=f"{score} match",font=("Arial",15),bg=color)
             go_to_room_btn = Button(frame,text="go to room",font=("Arial",15),bg=color,command=partial(self.manage_join_room_by_id,chat_room.room_id))
 
             room_btn.grid(row=0,column=0,pady=10,padx=20)
             members_joined_lbl.grid(row=1,column=0,pady=10)
-            admins_lbl.grid(row=2,column=0,pady=10,padx=20)
             score_lbl.grid(row=0,column=1,pady=10,padx=20)
             go_to_room_btn.grid(row=2,column=1,pady=10,padx=20)
 

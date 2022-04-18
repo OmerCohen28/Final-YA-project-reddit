@@ -25,7 +25,9 @@ class server:
         self.initialize_server_core_vars()
         self.rake_obj = rake_nltk.Rake('stop.txt')
 
-
+    '''
+    core functions that the server uses
+    '''
     def initialize_server_core_vars(self):
         self.curr_chat_id = self.db_conn.get_current_chat_room_id()
         if self.curr_chat_id is None:
@@ -36,14 +38,16 @@ class server:
         if self.chat_name_to_id_dict is None:
             self.chat_name_to_id_dict = {}
             self.db_conn.set_current_chat_name_to_id_dict({})
-           
+    '''
+    RAKE function group
+    '''     
     def get_all_words_from_chats(self):
         id_text_dict = {}
         for id_num in range(self.curr_chat_id):
             text = ""
             chat_room = self.db_conn.get_chat(id_num)
             for msg in chat_room.msgs:
-                text+= f". {msg}"
+                text+= f". {msg.msg}"
             id_text_dict[id_num] = text
         return id_text_dict
 
@@ -61,6 +65,13 @@ class server:
         self.rake_obj.extract_keywords_from_text(text)
         word_score_dict = self.rake_obj.get_word_degrees()
         return word_score_dict[word]
+    
+    def make_room_score_dict(self,keyword:str):
+        final_dict = {}
+        for i in range(self.curr_chat_id):
+            chat_room = self.db_conn.get_chat(i)
+            final_dict[chat_room] = self.clac_the_score_of_a_word_in_chat(i,keyword)
+        return final_dict
 
     '''
     This function is the main function that should be used to create new users, it updates the user id 
@@ -124,7 +135,7 @@ class server:
     to the DB and overall system
     '''
 
-    #main receving function
+    #"main" function
     def recv_msgs(self):
         while True:
             lst = self.all_sockets
@@ -171,6 +182,13 @@ class server:
                             del self.current_user_chat_room_dict[user_leaving]
                         except KeyError:
                             pass
+                    if(msg=="search"):
+                        self.return_to_client_room_score_dict(sockobj)
+
+
+    '''
+    function group to deal with requests from clients and respond
+    '''
 
     '''
     expected input : name(str),password(str), is_sys_admin(bool))
@@ -192,6 +210,7 @@ class server:
         name = ""
         password = ""
         sock.send(pickle.dumps("waiting for data"))
+        print('sent')
         name = pickle.loads(sock.recv(1054))
         sock.send(pickle.dumps('ok'))
         password = pickle.loads(sock.recv(1054))
@@ -307,7 +326,17 @@ class server:
                 sock = self.current_user_socket_dict[name]
                 print('sent refresh msg')
                 sock.send(pickle.dumps('need refresh'))
-        
+    
+    def return_to_client_room_score_dict(self,sockobj:socket):
+        sockobj.send(pickle.dumps("what is the word"))
+        print('sent')
+        keyword = pickle.loads(sockobj.recv(1054))
+        print('got it')
+        dict_to_send = self.make_room_score_dict(keyword)
+        sockobj.send(pickle.dumps(dict_to_send))
+        time.sleep(0.5)
+        sockobj.send("stop".encode())
+
         
         
 

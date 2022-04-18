@@ -1,6 +1,7 @@
 import sys
 from socket import *
 import pickle
+from tkinter import Frame
 from classes.user.user import User
 from classes.chatroom.chatroom import chatroom
 from classes.message.message import message
@@ -21,8 +22,8 @@ class user_controller:
                 break
             except:
                 pass
-        self.refresh = False
-        self.in_process = False
+        self.refresh = False #alatms if refresh is needed
+        self.in_process = False #alarms if any other function is waiting for a message before the ui checks if it needs a refresh
 
     def close_connection(self,name):
         self.in_process = True
@@ -33,9 +34,11 @@ class user_controller:
         self.sock.close()
 
     def get_current_waiting_msg(self):
+        print('geetting msg')
         try:
             read,write,eror = select([self.sock],[],[],1)
             msg = pickle.loads(read[0].recv(1054))
+            print('got it')
         except:
             try:
                 return msg
@@ -61,7 +64,6 @@ class user_controller:
 
     def sign_up(self,name,password,is_sys_admin):
         self.in_process = True
-        #if there is a problem with the IP recognition it lies here
         msgs = ['new user',name,password,is_sys_admin]
         for msg in msgs:
             self.sock.send(pickle.dumps(msg))
@@ -198,6 +200,46 @@ class user_controller:
         with open(f"pictures\\{img_name}",'wb') as new_img:
             new_img.write(img)
         self.in_process = False
+    
+    def send_and_recv_search_results(self,keyword:str) ->dict[chatroom:int]:
+        self.in_process = True
+        self.sock.send(pickle.dumps("search"))
+        print('sent')
+        msg = self.get_current_waiting_msg()
+        print(f"{msg} is what server said")
+        self.sock.send(pickle.dumps(keyword))
+        room_score_dict = self.get_large_data()
+        room_score_dict = {k: v for k, v in sorted(room_score_dict.items(), key=lambda item: item[1])}
+        result_dict = self.procces_room_score_dict(room_score_dict)
+
+        self.in_process = False
+
+        return result_dict
+
+    def procces_room_score_dict(self,room_score_dict:dict[chatroom:int]) ->dict[chatroom:int]:
+        final_dict = {}
+        room_score_dict = self.make_dict_score_be_precent(room_score_dict)
+        if len(room_score_dict) > 20:
+            look_for = 20
+        else:
+            look_for = len(room_score_dict)
+
+        lst_of_keys = list(room_score_dict)
+        needed_keys = lst_of_keys[-1*look_for:]
+        for key in needed_keys:
+            final_dict[key] = room_score_dict[key]
+        return final_dict 
+    
+    def make_dict_score_be_precent(self,room_score_dict:dict[chatroom:int]) ->dict[chatroom:int]:
+        all_values = room_score_dict.values()
+        max_score = max(all_values)
+        new_dict = {}
+        for key in room_score_dict:
+            try:
+                new_dict[key] = room_score_dict[key]//max_score*100
+            except ZeroDivisionError:
+                new_dict[key] = room_score_dict[key]*100
+        return new_dict
 
     @staticmethod
     def get_open_port():

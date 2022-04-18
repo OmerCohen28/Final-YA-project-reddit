@@ -36,10 +36,21 @@ import nltk
 
 from tkinter import Frame, Tk
 
-
 s = "my name is omer and im here to say that omer is the omer of the omers"
 r = rake_nltk.Rake("stop.txt")
 
 
-lst = [1,2,3]
-print(type(lst))
+r.extract_keywords_from_text(s)
+x = r.get_word_degrees()
+
+'''dict_test = {}
+for key in x:
+    dict_test[key] = x[key]
+print(dict_test)
+dict_test = {k: v for k, v in sorted(dict_test.items(), key=lambda item: item[1])}
+print(dict_test)
+print(len(dict_test))
+print(dict_test[10:])'''
+dict_test = {1:2,3:4,5:6}
+
+print(list(dict_test)[-2:])
