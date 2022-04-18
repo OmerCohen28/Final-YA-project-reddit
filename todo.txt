@@ -1,16 +1,15 @@
-need to think how to update the "current users" at each
-user's screen, also how to broadcast new message
+2 major problems - 
+    1 - search bar currently not working prob because of the 2nd problem
+    2 - the app is unoptimized at all, gotta go through the whole server/user controller and optimize their 
+        communication, way less messages going on, make it way lower!
 
-current thought - run a thread user side
-waiting for updates on new message
-if one comes, refresh the screen with the new message
+    after that -
+        remove the option for users to choose their own topics for their chatroom
+        add an option to "join to a room" literly just cuz the project asks for it
 
-how to send the message? keep a dictionary of all the online users and their matching socket, when someone leaves, remove them 
-from the dictionary
-
-current urgent problem is to make the server notify other users of changes!
-
-besides that and UI i just have to do text analaizing and search bar
+        ADMIN :(
+        
+        and done!
 
 need to do-
     -stated above
