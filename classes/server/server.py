@@ -8,6 +8,7 @@ import pickle
 from os.path import exists
 import time
 import rake_nltk
+import re
 
 class server:
     curr_chat_id =0 #since the server gives the chat id, i created a class variable
@@ -90,6 +91,7 @@ class server:
     def create_new_user_from_lst(self,info:list)->bool:
         user = User(info[0],info[1],info[2])
         if(self.add_user_to_db(user)):
+            print('returned true man')
             return True
         return False
 
@@ -171,8 +173,8 @@ class server:
                         self.check_new_chatroom_name(sockobj)
                     if(msg=="new room"):
                         self.get_new_room_and_add_to_db(sockobj)
-                    if(msg=="get room by id"):
-                        self.return_room_by_id(sockobj)
+                    if(msg[0:14]=="get room by id"):
+                        self.return_room_by_id(sockobj,msg)
                     if(msg=="new msg"):
                         self.get_new_message_and_add_to_db(sockobj)
                     if(msg=="leaving"):
@@ -196,25 +198,17 @@ class server:
     '''
     def get_new_user_data(self,sock:socket) ->None:
         sock.send(pickle.dumps('waiting for data'))
-        msg = pickle.loads(sock.recv(1054))
-        user_info = []
-        while msg!='done':
-            user_info.append(msg)
-            sock.send(pickle.dumps('ok'))
-            msg = pickle.loads(sock.recv(1054))
+        user_info = pickle.loads(sock.recv(1054))
         is_ok = self.create_new_user_from_lst(user_info)
+        print(f"server said {is_ok}")
         sock.send(pickle.dumps(is_ok))
     
     def check_log_in(self,sock:socket) -> None:
-        print('in')
-        name = ""
-        password = ""
         sock.send(pickle.dumps("waiting for data"))
-        print('sent')
-        name = pickle.loads(sock.recv(1054))
-        sock.send(pickle.dumps('ok'))
-        password = pickle.loads(sock.recv(1054))
-        sock.send(pickle.dumps('ok'))
+        user_info_lst = pickle.loads(sock.recv(1054))
+        name = user_info_lst[0]
+        password = user_info_lst[1]
+        sock.send(pickle.dumps("ok"))
         end = pickle.loads(sock.recv(1054))
         if(end=="done"):
             check = self.db_conn.get_user(name)
@@ -228,12 +222,8 @@ class server:
             sock.send(pickle.dumps(("password is inccorect","")))
 
     def check_new_chatroom_name(self,sock:socket):
-        print('here')
-        print(sock)
         sock.send(pickle.dumps("send name"))
         name = pickle.loads(sock.recv(1054))
-        print("got")
-        print(name)
         sock.send(pickle.dumps(self.check_if_chatroom_name_exists(name)))
 
     def get_new_room_and_add_to_db(self,sock:socket):
@@ -241,16 +231,16 @@ class server:
         new_room = pickle.loads(sock.recv(1054))
         sock.send(pickle.dumps(self.add_chatroom_to_db(new_room)))
     
-    def return_room_by_id(self,sock:socket):
+    def return_room_by_id(self,sock:socket,info):
         sock.send(pickle.dumps("what id"))
-        id_num = pickle.loads(sock.recv(1054))
+        id_pattern = re.compile(r"id:<(\d+)>")
+        name_pattern = re.compile(r"name:<(.+?)>")
+        id_num = re.findall(pattern=id_pattern,string=info)[0]
+        name = re.findall(pattern=name_pattern,string = info)[0]
         print(id_num)
+        print(name)
         chat_room = self.db_conn.get_chat(id_num)
-        sock.send(pickle.dumps('ok'))
-        name = pickle.loads(sock.recv(1054))
         self.current_user_chat_room_dict[name] = id_num
-        sock.send(pickle.dumps("ok"))
-        print(id_num)
         try:
             chat_room.current_members = self.get_how_many_members_are_online_to_a_room(id_num)
         except AttributeError:
@@ -259,7 +249,7 @@ class server:
             return
         sock.send(pickle.dumps(chat_room))
         print('sent chatroom')
-        time.sleep(1)
+        time.sleep(0.5)
         sock.send("stop".encode())
         msg = pickle.loads(sock.recv(1054))
         if msg == "no need":

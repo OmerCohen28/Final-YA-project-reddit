@@ -33,6 +33,7 @@ class ui_reddit:
         while True:
             time.sleep(2)
             if not self.user_controller.in_process:
+                print('taking data from UI')
                 self.user_controller.get_current_waiting_msg()
             if self.user_controller.refresh:
                 print("need refresh")

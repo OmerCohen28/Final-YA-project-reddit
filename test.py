@@ -51,6 +51,5 @@ dict_test = {k: v for k, v in sorted(dict_test.items(), key=lambda item: item[1]
 print(dict_test)
 print(len(dict_test))
 print(dict_test[10:])'''
-dict_test = {1:2,3:4,5:6}
-
-print(list(dict_test)[-2:])
+msg = "get room by id id:<0> name:<omer>"
+print(msg[0:14])
