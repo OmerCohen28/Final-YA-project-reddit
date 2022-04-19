@@ -31,10 +31,8 @@ class ui_reddit:
     #general purpose functions
     def refresh_chat_room(self):
         while True:
-            time.sleep(2)
-            if not self.user_controller.in_process:
-                print('taking data from UI')
-                self.user_controller.get_current_waiting_msg()
+            time.sleep(1)
+            self.user_controller.get_refresh_notification()
             if self.user_controller.refresh:
                 print("need refresh")
                 self.refresh_btn.pack(side=TOP,anchor=E)
@@ -526,17 +524,19 @@ class ui_reddit:
 
 
         result_dict = self.user_controller.send_and_recv_search_results(keyword)
-
+        print(f"results dict {result_dict}")
         result_lst = []
         for key in result_dict:
             result_lst.append((key,result_dict[key]))
-        
+        print(result_lst)
         frame_lst = self.make_frame_lst_of_chat_rooms(result_lst,second_frame)
 
         for frame in frame_lst:
             frame.pack(side=BOTTOM,fill=X,pady=10,expand=TRUE)
 
-
+        scroll_bar.pack(side=RIGHT,fill=Y)
+        canvas.pack(fill=BOTH,expand=TRUE)
+        main_frame.pack(fill=BOTH,expand=TRUE)
 
     #log in/sign up function group
 

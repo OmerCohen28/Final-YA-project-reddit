@@ -15,11 +15,12 @@ class user_controller:
             try:
                 self.sock = socket(AF_INET,SOCK_STREAM)
                 port = user_controller.get_port()
-                self.sock.setsockopt(SOL_SOCKET,SO_REUSEADDR, True)
-                self.sock.bind(("localhost",port))
-                print(port)
-                self.sock.connect(("localhost",50000))
-                break
+                if port != 50100:
+                    self.sock.setsockopt(SOL_SOCKET,SO_REUSEADDR, True)
+                    self.sock.bind(("localhost",port))
+                    print(port)
+                    self.sock.connect(("localhost",50000))
+                    break
             except:
                 pass
         self.refresh = False #alatms if refresh is needed
@@ -33,6 +34,17 @@ class user_controller:
         who_leaves = self.get_current_waiting_msg()
         self.sock.send(pickle.dumps(name))
         self.sock.close()
+    
+    #the communication for this function will
+    #alwyas take place at port 50100 UDP
+    def get_refresh_notification(self):
+        udp_sock = socket(AF_INET,SOCK_DGRAM)
+        udp_sock.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
+        udp_sock.bind(("",50100))
+        data,adress = udp_sock.recvfrom(1054)
+        data = pickle.loads(data)
+        if data == "need refresh":
+            self.refresh = True
 
     def get_current_waiting_msg(self):
         if not self.large_data:
@@ -52,7 +64,6 @@ class user_controller:
             self.refresh = True
 
     def get_large_data(self):
-        self.in_process = True
         self.large_data = True
         data = b""
         print('getting large data')
@@ -63,7 +74,6 @@ class user_controller:
                 break
             data+=packet
         msg = pickle.loads(data)
-        self.in_process = False
         self.large_data = False
         return msg
 
@@ -139,7 +149,7 @@ class user_controller:
         msg = self.get_current_waiting_msg()
         print(msg)
         chat_room = self.get_large_data()
-        print(chat_room)
+        print(f"server sent this as chatroom: {chat_room}")
         if not isinstance(chat_room,chatroom):
             self.in_process = False
             return False
@@ -185,7 +195,6 @@ class user_controller:
 
                 
     def get_picture_and_save(self,img_name:str):
-        self.in_process = True
         img = b""
         while True:
             packet = self.sock.recv(1054)
@@ -194,7 +203,6 @@ class user_controller:
             img+=packet
         with open(f"pictures\\{img_name}",'wb') as new_img:
             new_img.write(img)
-        self.in_process = False
     
     def send_and_recv_search_results(self,keyword:str) ->dict[chatroom:int]:
         self.in_process = True
@@ -204,6 +212,7 @@ class user_controller:
         print(f"{msg} is what server said")
         self.sock.send(pickle.dumps(keyword))
         room_score_dict = self.get_large_data()
+        print(room_score_dict)
         room_score_dict = {k: v for k, v in sorted(room_score_dict.items(), key=lambda item: item[1])}
         result_dict = self.procces_room_score_dict(room_score_dict)
 
@@ -238,7 +247,7 @@ class user_controller:
 
     @staticmethod
     def get_open_port():
-        start_port = 50002
+        start_port = 50010
         for i in range(start_port,start_port+3000):
             sock = socket(AF_INET,SOCK_DGRAM)
             try:

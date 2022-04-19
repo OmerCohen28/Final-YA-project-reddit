@@ -25,6 +25,9 @@ class server:
         self.current_user_socket_dict = {}
         self.initialize_server_core_vars()
         self.rake_obj = rake_nltk.Rake('stop.txt')
+        self.udp_sock = socket(AF_INET,SOCK_DGRAM)
+        self.udp_sock.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
+        self.udp_sock.bind(("",50501))
 
     '''
     core functions that the server uses
@@ -245,6 +248,8 @@ class server:
             chat_room.current_members = self.get_how_many_members_are_online_to_a_room(id_num)
         except AttributeError:
             sock.send(pickle.dumps("no chatroom"))
+            time.sleep(0.5)
+            sock.send("stop".encode())
             print('no chatroom')
             return
         sock.send(pickle.dumps(chat_room))
@@ -314,8 +319,11 @@ class server:
         for name in self.current_user_chat_room_dict:
             if self.current_user_chat_room_dict[name] == str(chat_room.room_id):
                 sock = self.current_user_socket_dict[name]
+                ip_addr,port = sock.getsockname()
                 print('sent refresh msg')
-                sock.send(pickle.dumps('need refresh'))
+                self.udp_sock.sendto(pickle.dumps("need refresh"),(ip_addr,50100))
+               
+                
     
     def return_to_client_room_score_dict(self,sockobj:socket):
         sockobj.send(pickle.dumps("what is the word"))

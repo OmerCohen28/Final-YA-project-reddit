@@ -51,5 +51,4 @@ dict_test = {k: v for k, v in sorted(dict_test.items(), key=lambda item: item[1]
 print(dict_test)
 print(len(dict_test))
 print(dict_test[10:])'''
-msg = "get room by id id:<0> name:<omer>"
-print(msg[0:14])
+sock = socket(AF_INET,SOCK_STREAM)
