@@ -47,6 +47,7 @@ class user_controller:
             self.refresh = True
 
     def get_current_waiting_msg(self):
+        print('taking data')
         if not self.large_data:
             try:
                 read,write,eror = select([self.sock],[],[],1)
@@ -70,9 +71,14 @@ class user_controller:
         while True:
             print('loop')
             packet = self.sock.recv(1054)
+            try:
+                print(packet.decode())
+            except:
+                pass
             if packet == "stop".encode():
                 break
             data+=packet
+        print(data)
         msg = pickle.loads(data)
         self.large_data = False
         return msg
@@ -146,8 +152,6 @@ class user_controller:
         self.in_process = True
         self.sock.send(pickle.dumps(f"get room by id id:<{id_num}> name:<{name}>"))
         print('from get room by id')
-        msg = self.get_current_waiting_msg()
-        print(msg)
         chat_room = self.get_large_data()
         print(f"server sent this as chatroom: {chat_room}")
         if not isinstance(chat_room,chatroom):
@@ -240,7 +244,7 @@ class user_controller:
         new_dict = {}
         for key in room_score_dict:
             try:
-                new_dict[key] = room_score_dict[key]//max_score*100
+                new_dict[key] = room_score_dict[key]*100//max_score
             except ZeroDivisionError:
                 new_dict[key] = room_score_dict[key]*100
         return new_dict

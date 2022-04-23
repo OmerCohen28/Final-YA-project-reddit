@@ -22,6 +22,8 @@ import pickle
 from os.path import exists
 from redis import *
 from classes.chatroom.chatroom import chatroom
+from classes.server.server import server
+from model import db
 import select
 import rake_nltk
 import nltk
@@ -40,8 +42,7 @@ s = "my name is omer and im here to say that omer is the omer of the omers"
 r = rake_nltk.Rake("stop.txt")
 
 
-r.extract_keywords_from_text(s)
-x = r.get_word_degrees()
+
 
 '''dict_test = {}
 for key in x:
@@ -51,4 +52,9 @@ dict_test = {k: v for k, v in sorted(dict_test.items(), key=lambda item: item[1]
 print(dict_test)
 print(len(dict_test))
 print(dict_test[10:])'''
-sock = socket(AF_INET,SOCK_STREAM)
+db_conn = db()
+serve  = server(db_conn)
+lst = serve.get_all_words_from_chats()
+lst[3] = "omer omer football football football"
+r.extract_keywords_from_text(lst[3])
+print(10*100//15)

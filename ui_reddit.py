@@ -634,7 +634,7 @@ class ui_reddit:
         frame = Frame(containter_frame,bg="white")
         msg_lbl = Label(frame,text="Room Info:",font=("Arial",15),bg="white")
         created_by_lbl = Label(frame,text=f"Created by {chatroom.creator.name}",font=("Arial",15),bg="white")
-
+ 
         msg_lbl.pack(side=TOP,pady=10,anchor=W)
         created_by_lbl.pack(side=TOP,pady=10,anchor=W)
 
@@ -716,13 +716,14 @@ class ui_reddit:
             
             room_btn = Button(frame,text=f"Room/{chat_room.name}",font=("Arial",15),bg=color,command=partial(self.manage_join_room_by_id,chat_room.room_id))
             members_joined_lbl = Label(frame,text = f"{len(chat_room.members)} members",font=("Arial",15),bg=color)
-            score_lbl = Label(frame,text=f"{score} match",font=("Arial",15),bg=color)
+            score_lbl = Label(frame,text=f"{score}% match",font=("Arial",15),bg=color)
             go_to_room_btn = Button(frame,text="go to room",font=("Arial",15),bg=color,command=partial(self.manage_join_room_by_id,chat_room.room_id))
 
             room_btn.grid(row=0,column=0,pady=10,padx=20)
             members_joined_lbl.grid(row=1,column=0,pady=10)
             score_lbl.grid(row=0,column=1,pady=10,padx=20)
             go_to_room_btn.grid(row=2,column=1,pady=10,padx=20)
+            count+=1
 
             result.append(frame)
         return result

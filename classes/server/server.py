@@ -235,7 +235,6 @@ class server:
         sock.send(pickle.dumps(self.add_chatroom_to_db(new_room)))
     
     def return_room_by_id(self,sock:socket,info):
-        sock.send(pickle.dumps("what id"))
         id_pattern = re.compile(r"id:<(\d+)>")
         name_pattern = re.compile(r"name:<(.+?)>")
         id_num = re.findall(pattern=id_pattern,string=info)[0]
@@ -254,6 +253,7 @@ class server:
             return
         sock.send(pickle.dumps(chat_room))
         print('sent chatroom')
+        print(chat_room)
         time.sleep(0.5)
         sock.send("stop".encode())
         msg = pickle.loads(sock.recv(1054))
