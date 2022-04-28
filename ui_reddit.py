@@ -17,7 +17,7 @@ import _thread
 class ui_reddit:
     def __init__(self,root:Tk):
         self.root = root
-        self.root.protocol("WM_DELETE_WINDOW",self.handle_close)
+        self.root.protocol("WM_DELETE_WINDOW",self .handle_close)
         self.root.title("Reddit Clone")
         self.root.resizable(False,False)
         self.user_controller = user_controller()
@@ -35,7 +35,7 @@ class ui_reddit:
             self.user_controller.get_refresh_notification()
             if self.user_controller.refresh:
                 print("need refresh")
-                self.refresh_btn.pack(side=TOP,anchor=E)
+                self.refresh_btn.pack(side=TOP,anchor=E,pady=10)
                 self.user_controller.refresh = False
 
     def clear_screen(self) ->None:
@@ -104,12 +104,16 @@ class ui_reddit:
         room_btn = Button(info_frame,text=f"Room/{msg.sent_in.name}",font=("Arial",15),bg="white",command=lambda:self.manage_join_room_by_id(msg.sent_in.room_id))
         created_by_lbl = Label(info_frame,text=f"Created by {msg.sent_by}",font=("Arial",15),bg="white")
         created_on_lbl = Label(info_frame,text=f"Created on {msg.time_str}",font=("Arial",15),bg="white")
+        space_lbl2 = Label(info_frame,text="",bg="white",width=120)
         room_btn.pack(side=TOP,anchor=W,pady=10,padx=5)
+        space_lbl2.pack(side=TOP,pady=10)
         created_by_lbl.pack(side=TOP,anchor=W,pady=10,padx=5)
         created_on_lbl.pack(side=TOP,anchor=W,pady=10,padx=5)
         info_frame.pack(side=TOP,pady=10)
 
         actual_msg_frame = Frame(msg_frame,bg="white",highlightbackground="#0066ff", highlightthickness=2)
+        space_lbl3 = Label(actual_msg_frame,text="",bg="white",width=120)
+        space_lbl3.pack()
         lbl_lst = []
         holder_msg = msg.msg
         if len(holder_msg) < 60:
@@ -320,6 +324,10 @@ class ui_reddit:
         back_to_feed_btn.pack(side=BOTTOM,anchor=W,padx=10)
         packing_frame.pack(side=LEFT,anchor=N,pady=10,fill=Y)
 
+        if not self.is_user_in_list(chatroom.members ):
+            join_btn = Button(canvas,bg="#6666ff",fg="white",text="Join Room!",font=("Arial",15),command=lambda: self.manage_join_room(chatroom),borderwidth=0)
+            join_btn.pack(side=RIGHT,anchor=N,pady=10,padx=20)
+
         self.add_msg_img = PhotoImage(file="program_pics\\add (1).png")
         add_btn = Button(canvas,image=self.add_msg_img,borderwidth=0,command=lambda:self.get_new_msg_info(chatroom),bg="white")
         add_btn.pack(side=BOTTOM,anchor=E)
@@ -528,7 +536,6 @@ class ui_reddit:
         result_lst = []
         for key in result_dict:
             result_lst.append((key,result_dict[key]))
-        print(result_lst)
         frame_lst = self.make_frame_lst_of_chat_rooms(result_lst,second_frame)
 
         for frame in frame_lst:
@@ -577,13 +584,15 @@ class ui_reddit:
     def user_actions(self,container_frame:Frame):
         frame = Frame(container_frame)
         msg_lbl = Label(frame,text="User Options:",font=("Arial",15,font.BOLD))
-        change_password_btn = Button(frame,text="Change password",command=self.Do,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
+        change_password_btn = Button(frame,text="Change password",command=self.change_password_window,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
         join_room_by_id_btn = Button(frame,text="Join room by ID",command=self.join_room_by_id_window,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
         create_chat_room_btn = Button(frame,text="Create New Room",command=self.create_chatroom,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
-        
+        join_room_by_name_btn = Button(frame,text="Join room by name",command=self.join_room_by_name_window,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
+
         msg_lbl.pack(side=TOP)
         create_chat_room_btn.pack(side=TOP,pady=10)
         join_room_by_id_btn.pack(side=TOP,pady=10)
+        join_room_by_name_btn.pack(side=TOP,pady=10)
         change_password_btn.pack(side=TOP,pady=10)
         return frame
 
@@ -608,11 +617,21 @@ class ui_reddit:
         id_entry.pack()
         submit_btn.pack(pady=10)
     
+    def join_room_by_name_window(self):
+        top_level = Toplevel(bg="white")
+        top_level.attributes('-topmost', True)
+        msg_lbl = Label(top_level,text="Join Room by name",bg="#6666ff",fg="white",font=("Arial",15))
+        name_entry = Entry(top_level,width=20,highlightbackground="#0066ff", highlightthickness=2)
+        submit_btn = Button(top_level,text="Join!",bg="white",command=lambda:self.manage_join_room_by_name(name_entry.get(),top_level))
+        msg_lbl.pack(padx=20,pady=10,fill=X)
+        name_entry.pack()
+        submit_btn.pack(pady=10)       
+    
     def manage_join_room_by_id(self,id_num,*top_level):
         try:
             tmp = int(id_num)
         except:
-            messagebox.showerror(title = "wrong ID",message="ID has to be a number")
+            messagebox.showerror(title = "wrong ID",message="ID has to be a postibe number")
             return
 
         chat_room = self.user_controller.get_room_by_id(id_num,self.user.name)
@@ -628,15 +647,70 @@ class ui_reddit:
                 top_level[0].destroy()
             except IndexError:
                 pass
+    
+    def manage_join_room_by_name(self,name,*top_level):
+        if name == "":
+            messagebox.showerror(title = "bad name",message="name can not be blank")
+            return
+
+        chat_room = self.user_controller.get_room_by_name(self.user.name,name)
+
+        if not isinstance(chat_room,chatroom):
+            if isinstance(chat_room,bool):
+                messagebox.showerror(title="Room not found",message="The room you tried to reach wasn't found")
+            else:
+                messagebox.showerror(title="ID not found",message="the ID you entered had no matching results")
+        else:
+            self.in_chat_screen(chat_room)
+            try:
+                top_level[0].destroy()
+            except IndexError:
+                pass
+    
+    def change_password_window(self):
+        top_level = Toplevel(bg="white")
+        top_level.attributes('-topmost', True)
+        msg_lbl = Label(top_level,text="Change Password",bg="#6666ff",fg="white",font=("Arial",15))
+        new_pass_entry = Entry(top_level,width=20,highlightbackground="#0066ff", highlightthickness=2)
+        submit_btn = Button(top_level,text="Join!",bg="white",command=lambda:self.manage_change_password(new_pass_entry.get(),top_level))
+        msg_lbl.pack(padx=20,pady=10,fill=X)
+        new_pass_entry.pack()
+        submit_btn.pack(pady=10)
+    
+    def manage_change_password(self,new_pass,*top_level):
+        if new_pass == "":
+            messagebox.showerror(title="invalid password",message="password can not be blank")
+            try:
+                top_level[0].destroy()
+                return
+            except IndexError:
+                return
+        result = self.user_controller.change_password(self.user,new_pass)
+        if result:
+            messagebox.showinfo(title="Password changed",message="Password changed successfully")
+            try:
+                top_level[0].destroy()
+                return
+            except IndexError:
+                return
+        else:
+            messagebox.showerror(title="Password was not changed",message="The procces was unsuccessful")
+            try:
+                top_level[0].destroy()
+                return
+            except IndexError:
+                return        
+            
 
     #in chat screen function group
     def user_stats(self,chatroom,containter_frame:Frame):
         frame = Frame(containter_frame,bg="white")
         msg_lbl = Label(frame,text="Room Info:",font=("Arial",15),bg="white")
         created_by_lbl = Label(frame,text=f"Created by {chatroom.creator.name}",font=("Arial",15),bg="white")
- 
+        members_lbl = Label(frame,text=f"This room has {len(chatroom.members)}",font=("Arial",15),bg="white")
         msg_lbl.pack(side=TOP,pady=10,anchor=W)
         created_by_lbl.pack(side=TOP,pady=10,anchor=W)
+        members_lbl.pack(side=TOP,pady=10,anchor=W)
 
         return frame
     
@@ -692,6 +766,19 @@ class ui_reddit:
         self.user_controller.create_message_and_sent_to_server(name,msg,chat_room,img_and_path,title)
         top_level.destroy()
 
+    def manage_join_room(self,chat_room:chatroom):
+        result = self.user_controller.join_room(self.user,chat_room)
+
+        if result:
+            messagebox.showinfo(title="joined room",message=f"You have joined {chat_room.name}!")
+        else:
+            messagebox.showerror(title="joinning room failed",message="The procces failed, you did not join this room")
+
+    def is_user_in_list(self,members:list[User]) ->bool:
+        for member in members:
+            if member.name == self.user.name:
+                return True
+        return False
     #search results function group
 
     def check_search_phrase(self,phrase:str):

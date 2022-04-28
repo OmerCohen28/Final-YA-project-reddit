@@ -14,6 +14,9 @@ class db:
         else:
             return False
 
+    def update_user(self,user:User) ->bool:
+        return self.r.set(str(user.name),pickle.dumps(user))
+
     def delete_user(self,name:str) ->bool:
         return self.r.delete(name)
     

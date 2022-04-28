@@ -14,6 +14,8 @@ class chatroom:
         self.common_words = []
         self.banned_words = banned_words
         self.msgs = []
+       
+    
 
     def kick(self,user:User) ->bool:
         try:
@@ -29,9 +31,6 @@ class chatroom:
             return True
         except:
             return False
-
-    def make_admin(self,user:str) ->None:
-        self.admins_list.append(user)
 
     def add_msg(self,msg):
         self.msgs.append(msg)

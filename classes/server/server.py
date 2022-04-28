@@ -130,10 +130,17 @@ class server:
         tmp = self.db_conn.get_chat(id_num)
 
         try:
-            x = tmp.common_words
+            x = tmp.msgs
             return True
         except:
             return False
+    
+    def get_name_to_id_chat_room_name_dict(self)->dict:
+        result = {}
+        for id_num in range(self.curr_chat_id):
+            chat_room = self.db_conn.get_chat(id_num)
+            result[chat_room.name] = id_num
+        return result
 
     '''
     group of functions devoted to receving new connections, users and chatrooms and handling adding them
@@ -178,6 +185,8 @@ class server:
                         self.get_new_room_and_add_to_db(sockobj)
                     if(msg[0:14]=="get room by id"):
                         self.return_room_by_id(sockobj,msg)
+                    if(msg=="room name dict"):
+                        self.get_room_by_name_and_call_id_func(sockobj,msg)
                     if(msg=="new msg"):
                         self.get_new_message_and_add_to_db(sockobj)
                     if(msg=="leaving"):
@@ -189,6 +198,10 @@ class server:
                             pass
                     if(msg=="search"):
                         self.return_to_client_room_score_dict(sockobj)
+                    if(msg[0:15] == "change password"):
+                        self.chage_password(sockobj,msg)
+                    if(msg[0:8]=="add user"):
+                        self.add_user_to_chat_room(sockobj,msg)
 
 
     '''
@@ -202,6 +215,7 @@ class server:
     def get_new_user_data(self,sock:socket) ->None:
         sock.send(pickle.dumps('waiting for data'))
         user_info = pickle.loads(sock.recv(1054))
+        sock.send(pickle.dumps("ok"))
         is_ok = self.create_new_user_from_lst(user_info)
         print(f"server said {is_ok}")
         sock.send(pickle.dumps(is_ok))
@@ -223,6 +237,35 @@ class server:
                 self.current_user_socket_dict[name] = sock
                 return
             sock.send(pickle.dumps(("password is inccorect","")))
+    
+    def chage_password(self,sock:socket,info:str):
+        name_pattern = re.compile(r"name:<(.+?)>")
+        new_pass_pattern = re.compile(r"password:<(.+?)>")
+        name = re.findall(string=info,pattern=name_pattern)[0]
+        new_pass = re.findall(string=info,pattern=new_pass_pattern)[0]
+        user = self.db_conn.get_user(name)
+        user.password = new_pass
+        result = self.db_conn.update_user(user)
+        sock.send(pickle.dumps(result))
+
+    def add_user_to_chat_room(self,sock:socket,info:str):
+        user_name_pattern =  re.compile(r"name:<(.+?)>")
+        room_id_pattern = re.compile(r"chat:<(.+?)>")
+        user_name = re.findall(string=info,pattern=user_name_pattern)[0]
+        room_id = re.findall(string=info,pattern=room_id_pattern)[0]
+
+        user = self.db_conn.get_user(user_name)
+        chat_room = self.db_conn.get_chat(room_id)
+        if chat_room.add_user(user):
+            sock.send(pickle.dumps(True))
+            print("sent true")
+            self.db_conn.insert_chat(chat_room.room_id,chat_room)
+            self.notify_all_members_of_chatroom_for_new_msg(chat_room)
+            return
+        print("sent false")
+        sock.send(pickle.dumps(False))
+
+
 
     def check_new_chatroom_name(self,sock:socket):
         sock.send(pickle.dumps("send name"))
@@ -331,7 +374,14 @@ class server:
         keyword = pickle.loads(sockobj.recv(1054))
         print('got it')
         dict_to_send = self.make_room_score_dict(keyword)
+        print(f"dict {dict_to_send}")
         sockobj.send(pickle.dumps(dict_to_send))
+        time.sleep(0.5)
+        sockobj.send("stop".encode())
+
+    def get_room_by_name_and_call_id_func(self,sockobj:socket,info):
+        id_name_dict = self.get_name_to_id_chat_room_name_dict()
+        sockobj.send(pickle.dumps(id_name_dict))
         time.sleep(0.5)
         sockobj.send("stop".encode())
 

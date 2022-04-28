@@ -50,7 +50,7 @@ class user_controller:
         print('taking data')
         if not self.large_data:
             try:
-                read,write,eror = select([self.sock],[],[],1)
+                read,write,eror = select([self.sock],[],[],2)
                 msg = pickle.loads(read[0].recv(1054))
                 print('got it')
                 print(msg)
@@ -89,6 +89,7 @@ class user_controller:
         msgs = ['new user',[name,password,is_sys_admin]]
         for msg in msgs:
             self.sock.send(pickle.dumps(msg))
+            print(msg)
             print('from sign up')
             new_msg = self.get_current_waiting_msg()
         print('from sign up')
@@ -101,19 +102,32 @@ class user_controller:
         self.in_process = True
         msgs = ['log in',[name,password]]
         for msg in msgs:
+            print(msg)
             self.sock.send(pickle.dumps(msg))
             print('from log in')
             new_msg = self.get_current_waiting_msg()
+            print(new_msg)
         self.sock.send(pickle.dumps('done'))
         print('from log in')
         msg = self.get_current_waiting_msg()
+        print(msg)
         self.in_process = False
         return msg
+    
+    def change_password(self,user:User,new_pass:str):
+        self.sock.send(pickle.dumps(f"change password password:<{new_pass}> name:<{user.name}>"))
+        result = self.get_current_waiting_msg()
+        return result
 
     def get_msgs_for_main_menu(self):
         self.in_process = True
         self.in_process = False
         return msgs
+
+    def join_room(self,user:User,chat_room:chatroom):
+        self.sock.send(pickle.dumps(f"add user name:<{user.name}> to chat:<{chat_room.room_id}>"))
+        result = self.get_current_waiting_msg()
+        return result
 
     def create_new_room_with_server(self,creator:User,name:str,topics,banned_words) -> bool:
         self.in_process = True
@@ -175,6 +189,16 @@ class user_controller:
         self.in_process = False
         return chat_room
     
+    def get_room_by_name(self,name:str,room_name:str)->dict:
+        self.sock.send(pickle.dumps(f"room name dict"))
+        print("from get room by name")
+        result_dict = self.get_large_data()
+        try:
+            return self.get_room_by_id(result_dict[room_name],name)
+        except KeyError:
+            return False
+
+
     def create_message_and_sent_to_server(self,name:str,msg:str,chat_room:chatroom,img_path_and_name:str,title:str):
         self.in_process = True
         if img_path_and_name != "":
@@ -217,6 +241,8 @@ class user_controller:
         self.sock.send(pickle.dumps(keyword))
         room_score_dict = self.get_large_data()
         print(room_score_dict)
+        if room_score_dict == {}:
+            return []
         room_score_dict = {k: v for k, v in sorted(room_score_dict.items(), key=lambda item: item[1])}
         result_dict = self.procces_room_score_dict(room_score_dict)
 
@@ -226,7 +252,9 @@ class user_controller:
 
     def procces_room_score_dict(self,room_score_dict:dict[chatroom:int]) ->dict[chatroom:int]:
         final_dict = {}
+        print(f"before precent {room_score_dict}")
         room_score_dict = self.make_dict_score_be_precent(room_score_dict)
+        print(f"user controller: {room_score_dict}")
         if len(room_score_dict) > 20:
             look_for = 20
         else:
@@ -240,6 +268,7 @@ class user_controller:
     
     def make_dict_score_be_precent(self,room_score_dict:dict[chatroom:int]) ->dict[chatroom:int]:
         all_values = room_score_dict.values()
+        print(all_values)
         max_score = max(all_values)
         new_dict = {}
         for key in room_score_dict:

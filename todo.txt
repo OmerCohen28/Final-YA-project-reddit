@@ -21,3 +21,8 @@ need to do-
 
 not urgent -
     -add an icon to the app
+
+
+
+
+check if user already in room before letting him joinm
