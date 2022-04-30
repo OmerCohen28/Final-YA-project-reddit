@@ -1,34 +1,23 @@
 import datetime
-from socket import AF_INET, SOCK_STREAM,socket
 from tkinter import  *
 from tkinter import filedialog
 from PIL import ImageTk,Image
 import re
 import pickle
-from os.path import exists
 from redis import *
 from classes.chatroom.chatroom import chatroom
 from classes.user.user import User
-import select
-import rake_nltk
-import nltk
 import re
 import time
-#filename = filedialog.askopenfilename(filetypes=[('image files', '.png'), ('image files', '.jpg')], )
-#print(filename)
 
-#name = filename[filename.rfind("/")+1:]
-#print(name)
 
-try:
-    import tkinter as tk
-    from tkinter import ttk
-except ImportError:
-    import Tkinter as tk
-    import ttk
-
+import tkinter as tk
+from tkinter import ttk
 from tkcalendar import Calendar, DateEntry
 
+'''
+important thingy
+'''
 def example1():
     def print_sel():
         print(cal.selection_get())
@@ -51,10 +40,10 @@ def example2():
     cal.pack(padx=10, pady=10)
 
 root = tk.Tk()
+
 s = ttk.Style(root)
 s.theme_use('clam')
 
 ttk.Button(root, text='Calendar', command=example1).pack(padx=10, pady=10)
 ttk.Button(root, text='DateEntry', command=example2).pack(padx=10, pady=10)
-
 root.mainloop()

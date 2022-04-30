@@ -5,6 +5,7 @@ from tkinter import *
 from tkinter import font
 from tkinter import messagebox
 from tkinter import filedialog
+from tkinter import ttk
 from PIL import ImageTk,Image
 import pickle
 from classes.chatroom.chatroom import chatroom
@@ -14,9 +15,12 @@ from user_controller import user_controller
 import time
 import _thread
 
+
 class ui_reddit:
     def __init__(self,root:Tk):
         self.root = root
+        s = ttk.Style(self.root)
+        s.theme_use('clam')
         self.root.protocol("WM_DELETE_WINDOW",self .handle_close)
         self.root.title("Reddit Clone")
         self.root.resizable(False,False)
@@ -819,7 +823,6 @@ class ui_reddit:
         return result
 
 rot = Tk()
-
 ui = ui_reddit(rot)
 
 ui.log_in_screen()

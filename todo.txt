@@ -2,14 +2,15 @@ after that -
         remove the option for users to choose their own topics for their chatroom
         add an option to "join to a room" literly just cuz the project asks for it
 
-        ADMIN :(
-        
-        and done!
+        add date calendar thingy from test.py (example1 function)
 
-need to do-
-    -stated above
-    - text analaizing
-    -admin
+        admin UI
+
+        add ons for the app
+
+        look again at text analaizing and optimize it
+
+
 
 not urgent -
     -add an icon to the app
