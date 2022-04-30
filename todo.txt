@@ -1,9 +1,4 @@
-2 major problems - 
-    1 - search bar currently not working prob because of the 2nd problem
-    2 - the app is unoptimized at all, gotta go through the whole server/user controller and optimize their 
-        communication, way less messages going on, make it way lower!
-
-    after that -
+after that -
         remove the option for users to choose their own topics for their chatroom
         add an option to "join to a room" literly just cuz the project asks for it
 
@@ -13,11 +8,8 @@
 
 need to do-
     -stated above
-    - search bar
     - text analaizing
     -admin
-    -UI
-    - find a way to calcuate the time a server and a user is up, delete chatroom accordingly
 
 not urgent -
     -add an icon to the app

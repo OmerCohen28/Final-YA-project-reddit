@@ -9,11 +9,13 @@ class chatroom:
         self.topcis = topcis
         self.current_members = 0
         self.members = [creator]
-        #self.create_time #add a way to know when it was created
         self.room_id = room_id
         self.common_words = []
         self.banned_words = banned_words
         self.msgs = []
+        self.last_sent_time = time.time()
+        self.time_untill_expire = time.time() +  (5*24*60*60)
+
        
     
 
@@ -34,5 +36,7 @@ class chatroom:
 
     def add_msg(self,msg):
         self.msgs.append(msg)
+        self.last_sent_time = time.time()
+        self.time_untill_expire = time.time() +  (5*24*60*60)
 
 

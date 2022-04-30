@@ -563,6 +563,8 @@ class ui_reddit:
             self.main_menu_screen()
 
     def send_sign_up_info(self):
+        if self.name_entry_sign_up.get()=="no":
+            messagebox.showerror(title="Username is invalid",message="The username you tried to sign up with is not allowed")
         is_ok = self.user_controller.sign_up(self.name_entry_sign_up.get(),self.password_entry_sign_up.get(),False)
         if(not is_ok):
             messagebox.showerror(title="Username is in use",message="Sorry, this username is already taken, please try another one")
@@ -707,7 +709,7 @@ class ui_reddit:
         frame = Frame(containter_frame,bg="white")
         msg_lbl = Label(frame,text="Room Info:",font=("Arial",15),bg="white")
         created_by_lbl = Label(frame,text=f"Created by {chatroom.creator.name}",font=("Arial",15),bg="white")
-        members_lbl = Label(frame,text=f"This room has {len(chatroom.members)}",font=("Arial",15),bg="white")
+        members_lbl = Label(frame,text=f"This room has {len(chatroom.members)} members",font=("Arial",15),bg="white")
         msg_lbl.pack(side=TOP,pady=10,anchor=W)
         created_by_lbl.pack(side=TOP,pady=10,anchor=W)
         members_lbl.pack(side=TOP,pady=10,anchor=W)
@@ -768,8 +770,9 @@ class ui_reddit:
 
     def manage_join_room(self,chat_room:chatroom):
         result = self.user_controller.join_room(self.user,chat_room)
-
-        if result:
+        if isinstance(result,str):
+            messagebox.showerror(title="room not found",message="The room you tried to reach has expired")
+        elif result:
             messagebox.showinfo(title="joined room",message=f"You have joined {chat_room.name}!")
         else:
             messagebox.showerror(title="joinning room failed",message="The procces failed, you did not join this room")

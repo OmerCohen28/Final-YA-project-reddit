@@ -13,7 +13,8 @@ import re
 class server:
     curr_chat_id =0 #since the server gives the chat id, i created a class variable
                     # to keep track of the current id between all instances
-    chat_name_to_id_dict = {}
+    chat_name_to_id_dict = {} #dict to help convert chat_room names to id, used when getting
+                              #a room by name
     def __init__(self,db_conn:db):
         self.conn_sock = socket(AF_INET,SOCK_STREAM)
         self.conn_sock.bind(("localhost",50000))
@@ -50,6 +51,8 @@ class server:
         for id_num in range(self.curr_chat_id):
             text = ""
             chat_room = self.db_conn.get_chat(id_num)
+            if isinstance(chat_room,str):
+                continue
             for msg in chat_room.msgs:
                 text+= f". {msg.msg}"
             id_text_dict[id_num] = text
@@ -74,6 +77,8 @@ class server:
         final_dict = {}
         for i in range(self.curr_chat_id):
             chat_room = self.db_conn.get_chat(i)
+            if isinstance(chat_room,str):
+                continue
             final_dict[chat_room] = self.clac_the_score_of_a_word_in_chat(i,keyword)
         return final_dict
 
@@ -138,9 +143,19 @@ class server:
     def get_name_to_id_chat_room_name_dict(self)->dict:
         result = {}
         for id_num in range(self.curr_chat_id):
+            if isinstance(chat_room,str):
+                continue
             chat_room = self.db_conn.get_chat(id_num)
             result[chat_room.name] = id_num
         return result
+    
+    def check_if_rooms_are_expired_and_replace(self):
+        for i in range(self.curr_chat_id):
+            chat_room = self.db_conn.get_chat(i)
+            if isinstance(chat_room,str):
+                continue
+            if time.time() - chat_room.time_untill_expire <0.1:
+                self.db_conn.insert_chat(i,"expired")
 
     '''
     group of functions devoted to receving new connections, users and chatrooms and handling adding them
@@ -202,6 +217,8 @@ class server:
                         self.chage_password(sockobj,msg)
                     if(msg[0:8]=="add user"):
                         self.add_user_to_chat_room(sockobj,msg)
+                    if(msg=="chat id"):
+                        sockobj.send(pickle.dumps(self.curr_chat_id))
 
 
     '''
@@ -256,6 +273,8 @@ class server:
 
         user = self.db_conn.get_user(user_name)
         chat_room = self.db_conn.get_chat(room_id)
+        if isinstance(chat_room,str):
+            sock.send(pickle.dumps("no chat room"))
         if chat_room.add_user(user):
             sock.send(pickle.dumps(True))
             print("sent true")
@@ -285,7 +304,8 @@ class server:
         print(id_num)
         print(name)
         chat_room = self.db_conn.get_chat(id_num)
-        self.current_user_chat_room_dict[name] = id_num
+        if name!="no":
+            self.current_user_chat_room_dict[name] = id_num
         try:
             chat_room.current_members = self.get_how_many_members_are_online_to_a_room(id_num)
         except AttributeError:
