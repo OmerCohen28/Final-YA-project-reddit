@@ -51,7 +51,7 @@ class admin_controller():
     
 
 admin = admin_controller()
-test = admin.get_user_chat_room_dict()
+test = admin.get_all_current_users()
 print(test)
 for key in test:
     print(key,test[key])
