@@ -1,7 +1,9 @@
 from socket import *
+from turtle import update
 from classes.chatroom.chatroom import chatroom
 from user_controller import user_controller
 import pickle
+import datetime
 
 class admin_controller():
     def __init__(self):
@@ -28,13 +30,28 @@ class admin_controller():
         return lst
     
     def get_all_current_users(self):
-        pass
+        self.user_controller.sock.send(pickle.dumps("get all users time dict"))
+        user_time_dict = self.user_controller.get_large_data()
+        print("uset time dict:",user_time_dict)
+        now =   datetime.datetime.now()
+
+        updated_dict = {}
+
+        for key in user_time_dict:
+            updated_dict[key] = now-user_time_dict[key]
+        
+        return updated_dict
+    
+    def get_user_chat_room_dict(self):
+        self.user_controller.sock.send(pickle.dumps("get all users chatroom dict"))
+        user_chat_room_dict = self.user_controller.get_large_data()
+        print(user_chat_room_dict)
+        return user_chat_room_dict
 
     
 
 admin = admin_controller()
-lst = admin.return_all_rooms_sorted_by_members()
-
-for chat_room in lst:
-    print(chat_room)
-    print(len(chat_room.members))
+test = admin.get_user_chat_room_dict()
+print(test)
+for key in test:
+    print(key,test[key])

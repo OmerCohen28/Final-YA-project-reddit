@@ -1,6 +1,6 @@
 after that -
+
         remove the option for users to choose their own topics for their chatroom
-        add an option to "join to a room" literly just cuz the project asks for it
 
         add date calendar thingy from test.py (example1 function)
 

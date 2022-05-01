@@ -1,3 +1,4 @@
+import datetime
 from itertools import count
 from socket import *
 from classes.chatroom.chatroom import chatroom
@@ -24,6 +25,7 @@ class server:
         self.db_conn = db_conn
         self.current_user_chat_room_dict = {}
         self.current_user_socket_dict = {}
+        self.users_time_dict = {}
         self.initialize_server_core_vars()
         self.rake_obj = rake_nltk.Rake('stop.txt')
         self.udp_sock = socket(AF_INET,SOCK_DGRAM)
@@ -162,7 +164,7 @@ class server:
     to the DB and overall system
     '''
 
-    #"main" function
+    # "main" function
     def recv_msgs(self):
         while True:
             lst = self.all_sockets
@@ -209,6 +211,8 @@ class server:
                         user_leaving = pickle.loads(sockobj.recv(1054))
                         try:
                             del self.current_user_chat_room_dict[user_leaving]
+                            del self.current_user_socket_dict[user_leaving]
+                            del self.users_time_dict[user_leaving]
                         except KeyError:
                             pass
                     if(msg=="search"):
@@ -219,6 +223,10 @@ class server:
                         self.add_user_to_chat_room(sockobj,msg)
                     if(msg=="chat id"):
                         sockobj.send(pickle.dumps(self.curr_chat_id))
+                    if(msg=="get all users time dict"):
+                        self.return_user_time_dict_to_admin(sockobj)
+                    if(msg=="get all users chatroom dict"):
+                        self.return_user_chat_room_dict_to_admin(sockobj)
 
 
     '''
@@ -252,6 +260,7 @@ class server:
             if(password == check.password):
                 sock.send(pickle.dumps(('ok',check)))
                 self.current_user_socket_dict[name] = sock
+                self.users_time_dict[name]=datetime.datetime.now()
                 return
             sock.send(pickle.dumps(("password is inccorect","")))
     
@@ -377,8 +386,6 @@ class server:
 
     def notify_all_members_of_chatroom_for_new_msg(self,chat_room):
         print('in refresh function')
-        print(self.current_user_chat_room_dict)
-        print(self.current_user_socket_dict)
         for name in self.current_user_chat_room_dict:
             if self.current_user_chat_room_dict[name] == str(chat_room.room_id):
                 sock = self.current_user_socket_dict[name]
@@ -404,6 +411,30 @@ class server:
         sockobj.send(pickle.dumps(id_name_dict))
         time.sleep(0.5)
         sockobj.send("stop".encode())
+
+    def return_user_time_dict_to_admin(self,sock:socket):
+        sock.send(pickle.dumps(self.users_time_dict))
+        time.sleep(0.5)
+        sock.send("stop".encode())
+    
+    def return_user_chat_room_dict_to_admin(self,sock:socket):
+        new_dict = {}
+
+        id_to_name_dict = {v: k for k, v in self.chat_name_to_id_dict.items()}
+        print("id to name:",id_to_name_dict)
+        print("user chat room:",self.current_user_chat_room_dict)
+        print("chat name to id",self.chat_name_to_id_dict)
+        for key in self.current_user_chat_room_dict:
+            print(key)
+            try:
+                new_dict[key] = id_to_name_dict[self.current_user_chat_room_dict[key]]
+                print("done")
+            except KeyError:
+                pass
+        print(new_dict)
+        sock.send(pickle.dumps(new_dict))
+        time.sleep(0.5)
+        sock.send("stop".encode())
 
         
         

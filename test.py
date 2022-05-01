@@ -46,4 +46,8 @@ s.theme_use('clam')
 
 ttk.Button(root, text='Calendar', command=example1).pack(padx=10, pady=10)
 ttk.Button(root, text='DateEntry', command=example2).pack(padx=10, pady=10)
-root.mainloop()
+#root.mainloop()
+
+r = Redis()
+x=pickle.loads(r.get("name to id dict"))
+print(x)

@@ -78,7 +78,6 @@ class user_controller:
             if packet == "stop".encode():
                 break
             data+=packet
-        print(data)
         msg = pickle.loads(data)
         self.large_data = False
         return msg
