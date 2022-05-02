@@ -1,4 +1,4 @@
-import time
+import datetime
 from classes.user.user import User
 
 class chatroom:
@@ -13,8 +13,7 @@ class chatroom:
         self.common_words = []
         self.banned_words = banned_words
         self.msgs = []
-        self.last_sent_time = time.time()
-        self.time_untill_expire = time.time() +  (5*24*60*60)
+        self.last_sent_time = datetime.datetime.now()
 
        
     
@@ -36,7 +35,5 @@ class chatroom:
 
     def add_msg(self,msg):
         self.msgs.append(msg)
-        self.last_sent_time = time.time()
-        self.time_untill_expire = time.time() +  (5*24*60*60)
 
 

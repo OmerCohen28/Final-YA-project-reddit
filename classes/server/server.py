@@ -45,6 +45,16 @@ class server:
         if self.chat_name_to_id_dict is None:
             self.chat_name_to_id_dict = {}
             self.db_conn.set_current_chat_name_to_id_dict({})
+        
+        self.days_to_skip = self.db_conn.get_amount_of_days_to_skip()
+    
+    def enter_line_into_log(self,msg:str):
+        with open('log.txt','a') as file:
+            now = datetime.datetime.now() + datetime.timedelta(days=int(self.days_to_skip))
+            string_to_write = f"{msg} at {now}\n"
+            file.write(string_to_write)
+
+
     '''
     RAKE function group
     '''     
@@ -156,7 +166,8 @@ class server:
             chat_room = self.db_conn.get_chat(i)
             if isinstance(chat_room,str):
                 continue
-            if time.time() - chat_room.time_untill_expire <0.1:
+            time_delta = datetime.datetime.now() - chat_room.last_sent_time + datetime.timedelta(days=int(self.days_to_skip))
+            if time_delta.days>5:
                 self.db_conn.insert_chat(i,"expired")
 
     '''
@@ -167,6 +178,7 @@ class server:
     # "main" function
     def recv_msgs(self):
         while True:
+            self.check_if_rooms_are_expired_and_replace()
             lst = self.all_sockets
             read,write,eror = select(lst,[],[],0)
             for sockobj in read:
@@ -189,22 +201,29 @@ class server:
                     msg = pickle.loads(msg)
                     print(msg)
                     if(msg=='new user'):
+                        self.enter_line_into_log("Recevied new user")
                         self.get_new_user_data(sockobj)
                     if(msg=="log in"):
+                        self.enter_line_into_log("Recevied a log-in")
                         self.check_log_in(sockobj)
                     if(msg=="need chat id"):
+                        self.enter_line_into_log("Returned a new chat id for a user")
                         sockobj.send(pickle.dumps(self.curr_chat_id))
                         self.curr_chat_id+=1
                         self.db_conn.set_current_chat_room_id(self.curr_chat_id)
                     if(msg=="is exist"):
                         self.check_new_chatroom_name(sockobj)
                     if(msg=="new room"):
+                        self.enter_line_into_log("Created a new room")
                         self.get_new_room_and_add_to_db(sockobj)
                     if(msg[0:14]=="get room by id"):
+                        self.enter_line_into_log("Returned a room by it's ID")
                         self.return_room_by_id(sockobj,msg)
                     if(msg=="room name dict"):
+                        self.enter_line_into_log("Returned a room-name dict")
                         self.get_room_by_name_and_call_id_func(sockobj,msg)
                     if(msg=="new msg"):
+                        self.enter_line_into_log("Recevied a new message")
                         self.get_new_message_and_add_to_db(sockobj)
                     if(msg=="leaving"):
                         sockobj.send(pickle.dumps("who?"))
@@ -213,20 +232,28 @@ class server:
                             del self.current_user_chat_room_dict[user_leaving]
                             del self.current_user_socket_dict[user_leaving]
                             del self.users_time_dict[user_leaving]
+                            self.enter_line_into_log(f"{user_leaving} left")
                         except KeyError:
                             pass
                     if(msg=="search"):
+                        self.enter_line_into_log("Retuned a search result")
                         self.return_to_client_room_score_dict(sockobj)
                     if(msg[0:15] == "change password"):
+                        self.enter_line_into_log("Changed password")
                         self.chage_password(sockobj,msg)
                     if(msg[0:8]=="add user"):
+                        self.enter_line_into_log("Added a user to a chatroom")
                         self.add_user_to_chat_room(sockobj,msg)
                     if(msg=="chat id"):
                         sockobj.send(pickle.dumps(self.curr_chat_id))
                     if(msg=="get all users time dict"):
+                        self.enter_line_into_log("Returned the user-time dict for all the users")
                         self.return_user_time_dict_to_admin(sockobj)
                     if(msg=="get all users chatroom dict"):
+                        self.enter_line_into_log("Returned the user-chatroom dict for all the")
                         self.return_user_chat_room_dict_to_admin(sockobj)
+                    if(msg[0:8]=="add days"):
+                        self.change_days(msg)
 
 
     '''
@@ -285,8 +312,10 @@ class server:
         if isinstance(chat_room,str):
             sock.send(pickle.dumps("no chat room"))
         if chat_room.add_user(user):
+            user.joined_room.append(chat_room)
             sock.send(pickle.dumps(True))
             print("sent true")
+            self.db_conn.update_user(user)
             self.db_conn.insert_chat(chat_room.room_id,chat_room)
             self.notify_all_members_of_chatroom_for_new_msg(chat_room)
             return
@@ -303,6 +332,10 @@ class server:
     def get_new_room_and_add_to_db(self,sock:socket):
         sock.send(pickle.dumps("ok"))
         new_room = pickle.loads(sock.recv(1054))
+        new_room.last_sent_time = new_room.last_sent_time + datetime.timedelta(days=int(self.days_to_skip))
+        user = new_room.creator
+        user.joined_room.append(new_room)
+        self.db_conn.update_user(user)
         sock.send(pickle.dumps(self.add_chatroom_to_db(new_room)))
     
     def return_room_by_id(self,sock:socket,info):
@@ -383,6 +416,7 @@ class server:
         chat_room.msgs.append(new_msg)
         self.db_conn.insert_chat(chat_room.room_id,chat_room)
         self.notify_all_members_of_chatroom_for_new_msg(chat_room)
+        chat_room.last_sent_time = datetime.datetime.now() + datetime.timedelta(days = int(self.days_to_skip))
 
     def notify_all_members_of_chatroom_for_new_msg(self,chat_room):
         print('in refresh function')
@@ -435,6 +469,17 @@ class server:
         sock.send(pickle.dumps(new_dict))
         time.sleep(0.5)
         sock.send("stop".encode())
+
+    
+    '''
+    function group to deal with admin requests and respond
+    '''
+
+    def change_days(self,info:str):
+        days_to_skip_pattern = re.compile(r"days:<(\d+)>")
+        days_to_skip = re.findall(string=info,pattern=days_to_skip_pattern)[0]
+        self.db_conn.set_amount_of_days_to_skip(days_to_skip)
+        self.days_to_skip = days_to_skip
 
         
         

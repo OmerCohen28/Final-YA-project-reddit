@@ -188,7 +188,7 @@ class user_controller:
         self.in_process = False
         return chat_room
     
-    def get_room_by_name(self,name:str,room_name:str)->dict:
+    def get_room_by_name_dict(self,name:str,room_name:str)->dict:
         self.sock.send(pickle.dumps(f"room name dict"))
         print("from get room by name")
         result_dict = self.get_large_data()

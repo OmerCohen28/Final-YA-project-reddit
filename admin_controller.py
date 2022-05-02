@@ -33,7 +33,7 @@ class admin_controller():
         self.user_controller.sock.send(pickle.dumps("get all users time dict"))
         user_time_dict = self.user_controller.get_large_data()
         print("uset time dict:",user_time_dict)
-        now =   datetime.datetime.now()
+        now = datetime.datetime.now()
 
         updated_dict = {}
 
@@ -47,11 +47,12 @@ class admin_controller():
         user_chat_room_dict = self.user_controller.get_large_data()
         print(user_chat_room_dict)
         return user_chat_room_dict
-
+    
+    def change_date_of_server(self,new_date:datetime.datetime):
+        days_to_skip_object = new_date - datetime.datetime.now() 
+        days_to_skip = days_to_skip_object.days
+        self.user_controller.sock.send(pickle.dumps(f"add days days:<{days_to_skip}>"))
     
 
 admin = admin_controller()
-test = admin.get_all_current_users()
-print(test)
-for key in test:
-    print(key,test[key])
+lst = admin.get_all_rooms_from_server()

@@ -224,6 +224,7 @@ class ui_reddit:
             result = self.user_controller.create_new_room_with_server(self.user,name,topics_lst,banned_words_lst)
             if result:
                 toplevel.destroy()
+                self.user.joined_room.append("yo")
             else:
                 messagebox.showerror(title="Creating a room failed",message="The proccess you attempted has failed, try again")
     def make_frame_chat_list(self,lst,container_frame:Frame):
@@ -294,7 +295,7 @@ class ui_reddit:
             pass   
         self.current_chat_id = chatroom.room_id
         self.clear_screen()
-        self.root.geometry("1150x800")
+        self.root.geometry("1250x800")
         self.root.configure(bg="white")
         top_frame = self.create_top_frame()
         top_frame.config(height=350)
@@ -356,7 +357,7 @@ class ui_reddit:
         print("menu")
         lst = self.user_controller.get_msgs_for_main_menu()
         self.clear_screen()
-        self.root.geometry("1150x800")
+        self.root.geometry("1250x800")
         self.root.configure(bg="white")
         top_frame = self.create_top_frame()
         top_frame.config(height=350)
@@ -378,6 +379,12 @@ class ui_reddit:
         user_actions_frame = self.user_actions(packing_frame)
         user_actions_frame.pack(side=TOP,anchor=W,pady=5)
         packing_frame.pack(side=LEFT,anchor=N,pady=10)
+
+        if self.user.is_sys_admin:
+            packing_admin_frame = Frame(canvas)
+            admin_actions_frame = self.admin_actions(packing_admin_frame)
+            admin_actions_frame.pack(side=TOP,anchor=E,pady=5)
+            packing_admin_frame.pack(side=RIGHT,anchor=N,pady=10)
 
 
         search_bar_frame = self.create_search_bar_frame(second_frame)
@@ -567,7 +574,8 @@ class ui_reddit:
             self.main_menu_screen()
 
     def send_sign_up_info(self):
-        if self.name_entry_sign_up.get()=="no":
+        not_allowed_lst = ['no',"name to id dict","chat id","key didn't have a value",]
+        if self.name_entry_sign_up.get() in not_allowed_lst:
             messagebox.showerror(title="Username is invalid",message="The username you tried to sign up with is not allowed")
         is_ok = self.user_controller.sign_up(self.name_entry_sign_up.get(),self.password_entry_sign_up.get(),False)
         if(not is_ok):
@@ -601,6 +609,22 @@ class ui_reddit:
         join_room_by_name_btn.pack(side=TOP,pady=10)
         change_password_btn.pack(side=TOP,pady=10)
         return frame
+    
+    def admin_actions(self,container_frame:Frame):
+        frame = Frame(container_frame)
+        msg_lbl = Label(frame,text="Admin Options:",font=("Arial",15,font.BOLD))
+        show_all_rooms_btn = Button(frame,text="Show all rooms",command=self.Do,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
+        show_current_users_btn = Button(frame,text="Show all current online users",command=self.Do,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
+        change_date_btn = Button(frame,text="Modify the date of the app",command=self.Do,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
+        change_app_settings_btn = Button(frame,text="Change the app settings",command=self.Do,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
+
+        msg_lbl.pack(side=TOP)
+        show_all_rooms_btn.pack(side=TOP,pady=10)
+        show_current_users_btn.pack(side=TOP,pady=10)
+        change_date_btn.pack(side=TOP,pady=10)
+        change_app_settings_btn.pack(side=TOP,pady=10)
+        return frame
+
 
     def create_search_bar_frame(self,container_frame:Frame):
         frame = Frame(container_frame,highlightbackground="#0066ff", highlightthickness=2)
@@ -659,7 +683,7 @@ class ui_reddit:
             messagebox.showerror(title = "bad name",message="name can not be blank")
             return
 
-        chat_room = self.user_controller.get_room_by_name(self.user.name,name)
+        chat_room = self.user_controller.get_room_by_name_dict(self.user.name,name)
 
         if not isinstance(chat_room,chatroom):
             if isinstance(chat_room,bool):
@@ -778,6 +802,7 @@ class ui_reddit:
             messagebox.showerror(title="room not found",message="The room you tried to reach has expired")
         elif result:
             messagebox.showinfo(title="joined room",message=f"You have joined {chat_room.name}!")
+            self.user.joined_room.append("yo")
         else:
             messagebox.showerror(title="joinning room failed",message="The procces failed, you did not join this room")
 
@@ -821,6 +846,12 @@ class ui_reddit:
 
             result.append(frame)
         return result
+    
+    #admin function group
+    def show_all_rooms_for_admin(self,room_lst:list[chatroom]):
+        self.clear_screen()
+
+
 
 rot = Tk()
 ui = ui_reddit(rot)

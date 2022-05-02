@@ -52,6 +52,17 @@ class db:
             return pickle.load(self.r.get("name to id dict"))
         except:
             return None
+    
+    def set_amount_of_days_to_skip(self,days:int):
+        self.r.set("days to skip",str(days))
+    
+    def get_amount_of_days_to_skip(self)->int:
+        days = self.r.get("days to skip")
+        try:
+            x = int(days)
+            return days
+        except:
+            return 0
 
 
 db_conn = db()

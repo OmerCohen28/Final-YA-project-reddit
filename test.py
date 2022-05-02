@@ -49,5 +49,7 @@ ttk.Button(root, text='DateEntry', command=example2).pack(padx=10, pady=10)
 #root.mainloop()
 
 r = Redis()
-x=pickle.loads(r.get("name to id dict"))
-print(x)
+
+chat = pickle.loads(r.get("omer"))
+chat.is_sys_admin = True
+r.set(chat.name,pickle.dumps(chat))
