@@ -1,11 +1,13 @@
 from cmath import phase
 from functools import partial
+from itertools import count
 from re import I
 from tkinter import *
 from tkinter import font
 from tkinter import messagebox
 from tkinter import filedialog
 from tkinter import ttk
+from turtle import bgcolor
 from PIL import ImageTk,Image
 import pickle
 from classes.chatroom.chatroom import chatroom
@@ -294,6 +296,7 @@ class ui_reddit:
         except:
             pass   
         self.current_chat_id = chatroom.room_id
+        self.show = "msgs"
         self.clear_screen()
         self.root.geometry("1250x800")
         self.root.configure(bg="white")
@@ -325,6 +328,10 @@ class ui_reddit:
         packing_frame = Frame(canvas,bg="white")
         user_stats_frame = self.user_stats(chatroom,packing_frame)
         user_stats_frame.pack(side=TOP,anchor=W,pady=5)
+        #only for admin
+        swap_btn = Button(packing_frame,text="Swap View",command=lambda:self.admin_change_between_users_and_messages_in_a_room(chatroom,second_frame))
+        swap_btn.pack(side=TOP,anchor=W,pady=5)
+
         back_to_feed_btn = Button(packing_frame,text="<< Back To Feed",bg="#6666ff",fg="white",font=("Arial",15),command=self.main_menu_screen)
         back_to_feed_btn.pack(side=BOTTOM,anchor=W,padx=10)
         packing_frame.pack(side=LEFT,anchor=N,pady=10,fill=Y)
@@ -850,8 +857,80 @@ class ui_reddit:
     #admin function group
     def show_all_rooms_for_admin(self,room_lst:list[chatroom]):
         self.clear_screen()
+    
+    def show_all_current_users_for_admin(self):
+        self.clear_screen()
+        top_frame = self.create_top_frame()
+        top_frame.config(height=350)
+        top_frame.pack(side=TOP,fill=X)
+
+        msg_lbl= Label(self.root,text="All current online users",font=("Arial",15,font.BOLD))
+        msg_lbl.pack(side=TOP)
+
+        frmae_lst = self.Do()
+    
+    def make_users_frame_lst(self,container_frame:Frame,users_lst:list[User])->list[Frame]:
+        result = []
+        count=0
+        for user in users_lst:
+            if count%2==0:
+                color = "#C8C8C8"
+            else:
+                color = "#F0F0F0"
+            
+            frame = Frame(container_frame,bg=color,highlightbackground="#0066FF",highlightthickness=2,width=300)
+            #what data i would like to show to the admin will have to be implemented here
+            #take a refrence in line 826 if i forget how to do this.
+    
+    def admin_change_between_users_and_messages_in_a_room(self,chatroom,frame:Frame):
+        for widgets in frame.winfo_children():
+            widgets.destroy()
+
+        if self.show == "msgs":
+            frame_lst = self.make_a_user_frame_list_for_in_chat_screen(chatroom,frame)
+        else:
+            self.show="users"
+            frame_lst = self.make_frame_chat_list(chatroom.msgs,frame)
+        for frame in frame_lst:
+            frame.pack(fill=BOTH,pady=10,expand=TRUE)
+
+    def make_a_user_frame_list_for_in_chat_screen(self,chatroom:chatroom,container_frame:Frame):
+        result = []
+        count=0
+        users_lst = chatroom.members
+        for user in users_lst:
+            if count%2==0:
+                color = "#C8C8C8"
+            else:
+                color = "#F0F0F0"
+            
+            frame = Frame(container_frame,bg=color,highlightbackground="#0066FF",highlightthickness=2,width=300)
+
+            name_lbl = Label(frame,text=f"Name: {user.name}",font=("Arial",15))
+            msgs_sent = self.how_many_messages_a_user_sent_in_a_chat_room(chatroom,user)
+            msgs_sent_lbl = Label(frame,text=f"Messages sent: {msgs_sent}",font=("Arial",15))
+
+            warn_btn = Button(frame,text="Warn User",command=self.Do,borderwidth=0,font=("Arial",15))
+            ban_btn = Button(frame,text="Ban User",command=self.Do,borderwidth=0,font=("Arial",15))
+
+            name_lbl.grid(column=0,row=0,padx=10,pady=10)
+            msgs_sent_lbl.grid(column=0,row=1,pady=10,padx=10)
+            warn_btn.grid(column=0,row=2,padx=10,pady=20)
+            ban_btn.grid(column=1,row=2,pady=20,padx=10)
+            count+=1
+            result.append(frame)
+        
+        return result
 
 
+        
+
+    def how_many_messages_a_user_sent_in_a_chat_room(self,chatroom:chatroom,user:User)->int:
+        count=0
+        for msg in chatroom.msgs:
+            if msg.sent_by == user.name:
+                count+=1
+        return count
 
 rot = Tk()
 ui = ui_reddit(rot)

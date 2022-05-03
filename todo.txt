@@ -17,5 +17,6 @@ not urgent -
 
 
 
+check if user is already logged on before letting him log in
 
 check if user already in room before letting him joinm

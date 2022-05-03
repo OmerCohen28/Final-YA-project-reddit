@@ -55,4 +55,4 @@ class admin_controller():
     
 
 admin = admin_controller()
-lst = admin.get_all_rooms_from_server()
+print(admin.get_all_current_users())

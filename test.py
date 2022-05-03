@@ -51,5 +51,6 @@ ttk.Button(root, text='DateEntry', command=example2).pack(padx=10, pady=10)
 r = Redis()
 
 chat = pickle.loads(r.get("omer"))
+print(len(chat.joined_room))
 chat.is_sys_admin = True
 r.set(chat.name,pickle.dumps(chat))

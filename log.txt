@@ -114,3 +114,33 @@ Recevied a log-in at 2022-05-02 21:08:08.782006
 Recevied a log-in at 2022-05-02 21:08:24.778858
 Recevied a log-in at 2022-05-02 21:08:33.178982
 Recevied a log-in at 2022-05-02 21:09:04.439114
+Recevied a log-in at 2022-05-03 16:06:01.348903
+Recevied a log-in at 2022-05-03 16:06:43.168733
+Returned a room by it's ID at 2022-05-03 16:08:29.050023
+Returned a room by it's ID at 2022-05-03 16:10:29.525918
+Returned a new chat id for a user at 2022-05-03 16:10:35.279963
+Created a new room at 2022-05-03 16:10:35.298913
+Returned a room by it's ID at 2022-05-03 16:10:36.517305
+Returned a room by it's ID at 2022-05-03 16:10:40.859722
+omer left at 2022-05-03 16:11:03.923843
+Returned the user-time dict for all the users at 2022-05-03 16:18:35.121267
+Recevied a log-in at 2022-05-03 16:18:48.748364
+Returned the user-time dict for all the users at 2022-05-03 16:19:02.834439
+Returned a room by it's ID at 2022-05-03 16:28:46.830370
+omer left at 2022-05-03 16:29:24.205605
+Recevied a log-in at 2022-05-03 16:30:18.319601
+Returned a room by it's ID at 2022-05-03 16:30:21.349892
+Returned a room by it's ID at 2022-05-03 16:59:54.671545
+omer left at 2022-05-03 17:02:55.565302
+Recevied a log-in at 2022-05-03 17:03:04.071900
+Returned a room by it's ID at 2022-05-03 17:03:06.907585
+Returned a room by it's ID at 2022-05-03 17:03:08.763558
+omer left at 2022-05-03 17:03:13.797773
+Recevied a log-in at 2022-05-03 17:03:37.313109
+Returned a room by it's ID at 2022-05-03 17:03:39.546477
+Recevied a log-in at 2022-05-03 17:06:55.896767
+Returned a room by it's ID at 2022-05-03 17:06:58.116086
+Returned a new chat id for a user at 2022-05-03 17:07:13.085194
+Created a new room at 2022-05-03 17:07:13.101151
+Returned a room by it's ID at 2022-05-03 17:07:19.368914
+omer left at 2022-05-03 17:07:32.870834
