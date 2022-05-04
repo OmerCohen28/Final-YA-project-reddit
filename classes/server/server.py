@@ -47,6 +47,10 @@ class server:
             self.db_conn.set_current_chat_name_to_id_dict({})
         
         self.days_to_skip = self.db_conn.get_amount_of_days_to_skip()
+
+        self.send_to_users_dict = self.db_conn.get_send_to_user_dict()
+
+        self.banned_users = self.db_conn.get_banned_users()
     
     def enter_line_into_log(self,msg:str):
         with open('log.txt','a') as file:
@@ -254,6 +258,10 @@ class server:
                         self.return_user_chat_room_dict_to_admin(sockobj)
                     if(msg[0:8]=="add days"):
                         self.change_days(msg)
+                    if(msg[0:12]=="msg for user"):
+                        self.set_a_new_message_for_a_user(sockobj,msg)
+                    if(msg=="any messages for me?"):
+                        pass
 
 
     '''
@@ -285,10 +293,13 @@ class server:
                 sock.send(pickle.dumps(("no username","")))
                 return
             if(password == check.password):
-                sock.send(pickle.dumps(('ok',check)))
-                self.current_user_socket_dict[name] = sock
-                self.users_time_dict[name]=datetime.datetime.now()
-                return
+                if name in self.banned_users:
+                    sock.send(pickle.dumps(('banned','')))
+                else:
+                    sock.send(pickle.dumps(('ok',check)))
+                    self.current_user_socket_dict[name] = sock
+                    self.users_time_dict[name]=datetime.datetime.now()
+                    return
             sock.send(pickle.dumps(("password is inccorect","")))
     
     def chage_password(self,sock:socket,info:str):
@@ -469,6 +480,14 @@ class server:
         sock.send(pickle.dumps(new_dict))
         time.sleep(0.5)
         sock.send("stop".encode())
+    
+    def send_messages_to_users(self,sock:socket):
+        for key in self.current_user_socket_dict:
+            if self.current_user_socket_dict[key] == sock:
+                sock.send(pickle.dumps(self.send_messages_to_users[key]))
+                return
+        sock.send(pickle.dumps("no"))
+        
 
     
     '''
@@ -481,7 +500,33 @@ class server:
         self.db_conn.set_amount_of_days_to_skip(days_to_skip)
         self.days_to_skip = days_to_skip
 
+    def set_a_new_message_for_a_user(self,sockobj:socket,info:str):
+        name_pattern = re.compile(r"name:<(.+?)>")
+        msg_pattern =  re.compile(r"msg:<(.+?)>")
+        name = re.findall(string=info,pattern=name_pattern)[0]
+        msg = re.findall(string=info,pattern=msg_pattern)[0]
         
+        test_if_user_exists = self.db_conn.get_user(name)
+        print("name of banned user",name)
+        print(info)
+        if isinstance(test_if_user_exists,str):
+            sockobj.send(pickle.dumps("eror"))
+            return
+        
+        try:
+            tmp = self.send_to_users_dict[name]
+        except KeyError:
+            sockobj.send(pickle.dumps("user already has a message"))
+
+        self.send_to_users_dict[name] = msg
+        self.db_conn.set_send_to_user_dict(self.send_to_users_dict)
+        sockobj.send(pickle.dumps("ok"))    
+
+        if msg=="ban":
+            self.banned_users.append(name)
+            self.db_conn.set_banned_users(self.banned_users)
+    
+
         
 
 

@@ -52,6 +52,11 @@ class admin_controller():
         days_to_skip_object = new_date - datetime.datetime.now() 
         days_to_skip = days_to_skip_object.days
         self.user_controller.sock.send(pickle.dumps(f"add days days:<{days_to_skip}>"))
+
+    def set_a_message_for_user(self,msg:str,name:str):
+        self.user_controller.sock.send(pickle.dumps(f"msg for user msg:<{msg}> name:<{name}>"))
+        result = self.user_controller.get_current_waiting_msg()
+        return result
     
 
 admin = admin_controller()

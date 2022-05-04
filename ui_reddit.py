@@ -1,19 +1,16 @@
-from cmath import phase
 from functools import partial
-from itertools import count
-from re import I
 from tkinter import *
 from tkinter import font
 from tkinter import messagebox
 from tkinter import filedialog
 from tkinter import ttk
-from turtle import bgcolor
 from PIL import ImageTk,Image
 import pickle
 from classes.chatroom.chatroom import chatroom
 from classes.message.message import message
 from classes.user.user import User
 from user_controller import user_controller
+from admin_controller import admin_controller
 import time
 import _thread
 
@@ -32,6 +29,7 @@ class ui_reddit:
         self.expand_msg_img_lst = []
         self.expand_msg_ing_lst_index=0
         self.current_chat_id = 0
+        self.admin_controller = admin_controller()
 
 
     #general purpose functions
@@ -323,7 +321,7 @@ class ui_reddit:
         canvas.bind("<Configure>",lambda event: canvas.configure(scrollregion=canvas.bbox("all")))
         canvas.bind_all("<MouseWheel>",lambda e:self.on_mousewheel(e,canvas))
         second_frame = Frame(canvas,bg="white",borderwidth=0)
-        canvas.create_window((225,0),window=second_frame,anchor=NW)
+        canvas.create_window((250,0),window=second_frame,anchor=NW)
 
         packing_frame = Frame(canvas,bg="white")
         user_stats_frame = self.user_stats(chatroom,packing_frame)
@@ -385,7 +383,7 @@ class ui_reddit:
         packing_frame = Frame(canvas)
         user_actions_frame = self.user_actions(packing_frame)
         user_actions_frame.pack(side=TOP,anchor=W,pady=5)
-        packing_frame.pack(side=LEFT,anchor=N,pady=10)
+        packing_frame.pack(side=LEFT,anchor=N,pady=10,padx=10)
 
         if self.user.is_sys_admin:
             packing_admin_frame = Frame(canvas)
@@ -575,10 +573,14 @@ class ui_reddit:
         if(msg == "no username"):
             messagebox.showerror(title="Log in failed",message="The username you enterd was inccorect, try again")     
         elif(msg=="password is inccorect"):
-            messagebox.showerror(title="Log in failed",message="The password you enterd was inccorect, try again")        
+            messagebox.showerror(title="Log in failed",message="The password you enterd was inccorect, try again")     
+        elif(msg=="banned"):
+            messagebox.showerror(title="This user is banned",message="This user was benned by an admin and is no longer active") 
+            self.banned_screen()
         else:
             self.user = user
             self.main_menu_screen()
+            
 
     def send_sign_up_info(self):
         not_allowed_lst = ['no',"name to id dict","chat id","key didn't have a value",]
@@ -599,6 +601,18 @@ class ui_reddit:
     def change_to_signup(self):
         self.sign_up_screen()
 
+    def check_for_messages(self):
+        msg = self.user_controller.get_current_waiting_msg()
+        if msg == "warn":
+            messagebox.showinfo(title="You have a message from the server",message="You have been warned by an admin, please watch your behavior")
+        if msg == "ban":
+            messagebox.showinfo(title="You have a message from the server",message="You have been banned by an admin, this user is not allowed in this app anymore")
+
+    def banned_screen(self):
+        self.clear_screen()
+        self.banned_img = ImageTk.PhotoImage(Image.open("program_pics\\banned.jpg"))
+        banned_lbl = Label(self.root,image=self.banned_img,borderwidth=0)
+        banned_lbl.pack()
 
     #main menu screen functin groups
     
@@ -887,9 +901,10 @@ class ui_reddit:
             widgets.destroy()
 
         if self.show == "msgs":
+            self.show="users"
             frame_lst = self.make_a_user_frame_list_for_in_chat_screen(chatroom,frame)
         else:
-            self.show="users"
+            self.show="msgs"
             frame_lst = self.make_frame_chat_list(chatroom.msgs,frame)
         for frame in frame_lst:
             frame.pack(fill=BOTH,pady=10,expand=TRUE)
@@ -910,17 +925,44 @@ class ui_reddit:
             msgs_sent = self.how_many_messages_a_user_sent_in_a_chat_room(chatroom,user)
             msgs_sent_lbl = Label(frame,text=f"Messages sent: {msgs_sent}",font=("Arial",15))
 
-            warn_btn = Button(frame,text="Warn User",command=self.Do,borderwidth=0,font=("Arial",15))
-            ban_btn = Button(frame,text="Ban User",command=self.Do,borderwidth=0,font=("Arial",15))
+            warn_btn = Button(frame,text="Warn User",command=lambda:self.manage_sending_a_msg_for_user("warn"),borderwidth=0,font=("Arial",15))
+            ban_btn = Button(frame,text="Ban User",command=lambda:self.manage_sending_a_msg_for_user("ban"),borderwidth=0,font=("Arial",15))
 
-            name_lbl.grid(column=0,row=0,padx=10,pady=10)
-            msgs_sent_lbl.grid(column=0,row=1,pady=10,padx=10)
-            warn_btn.grid(column=0,row=2,padx=10,pady=20)
-            ban_btn.grid(column=1,row=2,pady=20,padx=10)
+            space_lbl = Label(frame,text="",bg=color,width=100)
+            space_lbl.pack()
+            name_lbl.pack(side=TOP,padx=10,pady=10,anchor=W)
+            msgs_sent_lbl.pack(side=TOP,padx=10,pady=10,anchor=W)
+            warn_btn.pack(side=LEFT,padx=10,pady=10)
+            ban_btn.pack(side=LEFT,padx=10,pady=10)
             count+=1
             result.append(frame)
         
         return result
+    
+    def manage_sending_a_msg_for_user(self,msg:str):
+        top_level = Toplevel()
+
+        msg_lbl = Label(top_level,text=f"Enter the name of the user you would like to {msg}",font=("Arial",15))
+        msg_lbl.pack()
+
+        name_entry = Entry(top_level,font=("Arial",15))
+        name_entry.pack()
+
+        submit_btn = Button(top_level,text="Submit!",font=("Arial",15),command=lambda:self.send_waiting_msg(msg,name_entry.get(),top_level))
+        submit_btn.pack()
+
+    def send_waiting_msg(self,msg:str,name:str,top_level:Toplevel):
+        result = self.admin_controller.set_a_message_for_user(msg,name)
+
+        if result == "eror":
+            messagebox.showerror(title="Eror sending message",message=f"The user you tried to {msg} does not exist")
+            return
+        
+        if result == "user already has a message":
+            messagebox.showerror(title="Eror sending a message",message="User already has a message waiting for him")
+            return
+        
+        top_level.destroy()
 
 
         

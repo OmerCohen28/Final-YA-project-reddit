@@ -1,7 +1,5 @@
-import sys
 from socket import *
 import pickle
-from tkinter import Frame
 from classes.user.user import User
 from classes.chatroom.chatroom import chatroom
 from classes.message.message import message
@@ -23,6 +21,9 @@ class user_controller:
                     break
             except:
                 pass
+        self.udp_sock = socket(AF_INET,SOCK_DGRAM)
+        self.udp_sock.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
+        self.udp_sock.bind(("",50100))
         self.refresh = False #alatms if refresh is needed
         self.in_process = False #alarms if any other function is waiting for a message before the ui checks if it needs a refresh
         self.large_data = False #alarms if there is a process of receving large data
@@ -38,10 +39,7 @@ class user_controller:
     #the communication for this function will
     #alwyas take place at port 50100 UDP
     def get_refresh_notification(self):
-        udp_sock = socket(AF_INET,SOCK_DGRAM)
-        udp_sock.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
-        udp_sock.bind(("",50100))
-        data,adress = udp_sock.recvfrom(1054)
+        data,adress = self.udp_sock.recvfrom(1054)
         data = pickle.loads(data)
         if data == "need refresh":
             self.refresh = True
@@ -276,6 +274,11 @@ class user_controller:
             except ZeroDivisionError:
                 new_dict[key] = room_score_dict[key]*100
         return new_dict
+    
+    def check_for_msgs(self)->str:
+        self.sock.send(pickle.dumps("any messages for me?"))
+        msg = self.get_current_waiting_msg()
+        return msg
 
     @staticmethod
     def get_open_port():

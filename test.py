@@ -9,7 +9,7 @@ from classes.chatroom.chatroom import chatroom
 from classes.user.user import User
 import re
 import time
-
+import sys
 
 import tkinter as tk
 from tkinter import ttk
@@ -50,7 +50,9 @@ ttk.Button(root, text='DateEntry', command=example2).pack(padx=10, pady=10)
 
 r = Redis()
 
-chat = pickle.loads(r.get("omer"))
-print(len(chat.joined_room))
+lst = []
+print(type(pickle.loads(r.get("omer1"))))
+sys.exit()
+print(chat.password)
 chat.is_sys_admin = True
 r.set(chat.name,pickle.dumps(chat))
