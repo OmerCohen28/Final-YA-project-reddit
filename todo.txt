@@ -3,8 +3,6 @@ TODO for the messages feature -
 
 - add a live getting message, not just when user logges in, maybe UDP
 
-- add a relation between ban/warn and respective user when pressing the btn
-
 - after banning the user, remove him from all lists and stuff (for example so he won't show up in the users in a room list)
 
 

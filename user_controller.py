@@ -39,12 +39,10 @@ class user_controller:
     #the communication for this function will
     #alwyas take place at port 50100 UDP
     def get_refresh_notification(self):
-        print("waiting in refrehs")
-        read,write,eror = select([self.udp_sock],[],[],1)
-        if len(read)==0:
-            return
-        data,adress = self.udp_sock.recvfrom(1054)
-        print("got data in refresh")
+        udp_sock = socket(AF_INET,SOCK_DGRAM)
+        udp_sock.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
+        udp_sock.bind(("",50100))
+        data,adress = udp_sock.recvfrom(1054)
         data = pickle.loads(data)
         if data == "need refresh":
             self.refresh = True

@@ -1,4 +1,5 @@
 import datetime
+from socket import SOCK_DGRAM, socket
 from tkinter import  *
 from tkinter import filedialog
 from PIL import ImageTk,Image
@@ -10,6 +11,11 @@ from classes.user.user import User
 import re
 import time
 import sys
+import select
+import rake_nltk
+import nltk
+#filename = filedialog.askopenfilename(filetypes=[('image files', '.png'), ('image files', '.jpg')], )
+#print(filename)
 
 import tkinter as tk
 from tkinter import ttk
@@ -56,4 +62,4 @@ r.set("omer",pickle.dumps(user))
 sys.exit()
 print(chat.password)
 chat.is_sys_admin = True
-r.set(chat.name,pickle.dumps(chat))
+

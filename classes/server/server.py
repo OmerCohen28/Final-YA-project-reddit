@@ -434,7 +434,8 @@ class server:
         for name in self.current_user_chat_room_dict:
             if self.current_user_chat_room_dict[name] == str(chat_room.room_id):
                 sock = self.current_user_socket_dict[name]
-                ip_addr,port = sock.getsockname()
+                ip_addr,port = sock.getpeername()
+                print(name)
                 print('sent refresh msg to',ip_addr,"port",port)
                 self.udp_sock.sendto(pickle.dumps("need refresh"),(ip_addr,50100))
                
