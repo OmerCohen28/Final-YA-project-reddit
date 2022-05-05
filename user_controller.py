@@ -23,7 +23,7 @@ class user_controller:
                 pass
         self.udp_sock = socket(AF_INET,SOCK_DGRAM)
         self.udp_sock.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
-        self.udp_sock.bind(("",50100))
+        self.udp_sock.bind(("127.0.0.1",50100))
         self.refresh = False #alatms if refresh is needed
         self.in_process = False #alarms if any other function is waiting for a message before the ui checks if it needs a refresh
         self.large_data = False #alarms if there is a process of receving large data
@@ -39,7 +39,12 @@ class user_controller:
     #the communication for this function will
     #alwyas take place at port 50100 UDP
     def get_refresh_notification(self):
+        print("waiting in refrehs")
+        read,write,eror = select([self.udp_sock],[],[],1)
+        if len(read)==0:
+            return
         data,adress = self.udp_sock.recvfrom(1054)
+        print("got data in refresh")
         data = pickle.loads(data)
         if data == "need refresh":
             self.refresh = True

@@ -50,8 +50,9 @@ ttk.Button(root, text='DateEntry', command=example2).pack(padx=10, pady=10)
 
 r = Redis()
 
-lst = []
-print(type(pickle.loads(r.get("omer1"))))
+user = pickle.loads(r.get("omer"))
+user.is_sys_admin = True
+r.set("omer",pickle.dumps(user))
 sys.exit()
 print(chat.password)
 chat.is_sys_admin = True

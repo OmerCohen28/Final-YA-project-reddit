@@ -239,3 +239,77 @@ elad left at 2022-05-04 18:57:42.465203
 Returned the user-time dict for all the users at 2022-05-04 18:57:44.971952
 Recevied a log-in at 2022-05-04 18:57:48.858308
 omer left at 2022-05-04 18:58:17.173063
+Returned the user-time dict for all the users at 2022-05-05 18:51:59.904884
+Recevied a log-in at 2022-05-05 18:52:03.063223
+Recevied new user at 2022-05-05 18:52:08.109608
+Recevied a log-in at 2022-05-05 18:52:11.087881
+Returned the user-time dict for all the users at 2022-05-05 18:53:06.668039
+Recevied a log-in at 2022-05-05 18:53:09.743913
+Returned the user-time dict for all the users at 2022-05-05 18:53:38.817342
+Recevied new user at 2022-05-05 18:53:43.743255
+Recevied a log-in at 2022-05-05 18:53:48.465040
+Returned a new chat id for a user at 2022-05-05 18:53:59.883550
+Created a new room at 2022-05-05 18:53:59.911475
+Returned a room by it's ID at 2022-05-05 18:54:03.651808
+Returned a room by it's ID at 2022-05-05 18:54:08.500737
+Added a user to a chatroom at 2022-05-05 18:54:16.469248
+Returned a room by it's ID at 2022-05-05 18:54:24.671551
+Returned the user-time dict for all the users at 2022-05-05 18:55:02.349233
+Recevied a log-in at 2022-05-05 18:55:05.533689
+Returned a room by it's ID at 2022-05-05 18:55:10.310963
+Returned the user-time dict for all the users at 2022-05-05 18:55:41.693853
+Recevied a log-in at 2022-05-05 18:55:45.005752
+Returned a room by it's ID at 2022-05-05 18:55:48.426910
+Returned the user-time dict for all the users at 2022-05-05 18:56:46.979585
+Recevied a log-in at 2022-05-05 18:56:50.317425
+Returned a room by it's ID at 2022-05-05 18:56:52.854831
+Returned the user-time dict for all the users at 2022-05-05 18:57:14.464572
+Recevied a log-in at 2022-05-05 18:57:18.448146
+Returned the user-time dict for all the users at 2022-05-05 18:57:27.482866
+Recevied a log-in at 2022-05-05 18:57:31.335581
+Returned the user-time dict for all the users at 2022-05-05 18:57:57.304706
+Recevied a log-in at 2022-05-05 18:58:01.153118
+Returned the user-time dict for all the users at 2022-05-05 18:58:45.799078
+Recevied new user at 2022-05-05 18:58:50.127721
+Recevied a log-in at 2022-05-05 18:58:52.852125
+Returned a room by it's ID at 2022-05-05 18:58:55.532328
+Added a user to a chatroom at 2022-05-05 18:58:57.495732
+Added a user to a chatroom at 2022-05-05 18:59:00.562585
+Returned a new chat id for a user at 2022-05-05 18:59:20.536222
+Created a new room at 2022-05-05 18:59:20.561521
+Returned a room by it's ID at 2022-05-05 18:59:23.057490
+Returned a new chat id for a user at 2022-05-05 18:59:32.302883
+Created a new room at 2022-05-05 18:59:32.369705
+Returned a room by it's ID at 2022-05-05 18:59:34.448766
+Returned a room by it's ID at 2022-05-05 18:59:37.245156
+Returned a room by it's ID at 2022-05-05 18:59:41.356493
+Added a user to a chatroom at 2022-05-05 18:59:42.944789
+Recevied a new message at 2022-05-05 18:59:59.649124
+omer left at 2022-05-05 19:00:06.238953
+omer2 left at 2022-05-05 19:00:07.012306
+Returned the user-time dict for all the users at 2022-05-05 19:01:34.774774
+Recevied a log-in at 2022-05-05 19:01:38.174844
+Returned a room by it's ID at 2022-05-05 19:01:42.158195
+Recevied a new message at 2022-05-05 19:01:46.811656
+Returned the user-time dict for all the users at 2022-05-05 19:02:20.681128
+Recevied a log-in at 2022-05-05 19:02:24.561474
+Returned a room by it's ID at 2022-05-05 19:02:28.060337
+Recevied a new message at 2022-05-05 19:02:33.353477
+Returned the user-time dict for all the users at 2022-05-05 19:04:29.210148
+Recevied a log-in at 2022-05-05 19:04:32.754327
+Returned a room by it's ID at 2022-05-05 19:04:36.505387
+Recevied a new message at 2022-05-05 19:04:42.461368
+Returned the user-time dict for all the users at 2022-05-05 19:07:07.533597
+Recevied a log-in at 2022-05-05 19:07:11.388105
+Returned a room by it's ID at 2022-05-05 19:07:13.572809
+Recevied a new message at 2022-05-05 19:07:19.994610
+Returned the user-time dict for all the users at 2022-05-05 19:09:39.526465
+Recevied a log-in at 2022-05-05 19:09:45.028962
+Returned a room by it's ID at 2022-05-05 19:09:47.981811
+Recevied a new message at 2022-05-05 19:09:52.827752
+Returned the user-time dict for all the users at 2022-05-05 19:10:59.844744
+Returned the user-time dict for all the users at 2022-05-05 19:11:07.585833
+Recevied a log-in at 2022-05-05 19:11:10.778782
+Returned a room by it's ID at 2022-05-05 19:11:13.592654
+Recevied a new message at 2022-05-05 19:11:19.447069
+omer left at 2022-05-05 19:11:50.627859

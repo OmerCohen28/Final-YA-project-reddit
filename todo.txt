@@ -14,8 +14,6 @@ after that -
 
         add date calendar thingy from test.py (example1 function)
 
-        admin UI
-
         add ons for the app
 
         look again at text analaizing and optimize it
@@ -28,5 +26,3 @@ not urgent -
 
 
 check if user is already logged on before letting him log in
-
-check if user already in room before letting him joinm
