@@ -436,7 +436,7 @@ class server:
                 sock = self.current_user_socket_dict[name]
                 ip_addr,port = sock.getpeername()
                 print(name)
-                print('sent refresh msg to',ip_addr,"port",port)
+                print('sent refresh msg to',ip_addr)
                 self.udp_sock.sendto(pickle.dumps("need refresh"),(ip_addr,50100))
                
                 

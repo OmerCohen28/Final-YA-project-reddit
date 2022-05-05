@@ -35,7 +35,6 @@ class ui_reddit:
     #general purpose functions
     def refresh_chat_room(self):
         while True:
-            time.sleep(1)
             self.user_controller.get_refresh_notification()
             if self.user_controller.refresh:
                 print("need refresh -------------------------")
