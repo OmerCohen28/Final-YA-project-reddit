@@ -951,9 +951,6 @@ class ui_reddit:
             return
         
 
-
-        
-
     def how_many_messages_a_user_sent_in_a_chat_room(self,chatroom:chatroom,user:User)->int:
         count=0
         for msg in chatroom.msgs:

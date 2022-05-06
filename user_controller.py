@@ -9,21 +9,17 @@ from os.path import exists
 from select import select
 class user_controller:
     def __init__(self):
-        while True:
-            try:
-                self.sock = socket(AF_INET,SOCK_STREAM)
-                port = user_controller.get_port()
-                if port != 50100:
-                    self.sock.setsockopt(SOL_SOCKET,SO_REUSEADDR, True)
-                    self.sock.bind(("localhost",port))
-                    print(port)
-                    self.sock.connect(("localhost",50000))
-                    break
-            except:
-                pass
+        self.ip_addr = "192.168.0.111"
+        self.sock = socket(AF_INET,SOCK_STREAM)
+        self.sock.setsockopt(SOL_SOCKET,SO_REUSEADDR, True)
+        self.sock.bind((self.ip_addr,0))
+        self.sock.connect((self.ip_addr,50000))
+
         self.udp_sock = socket(AF_INET,SOCK_DGRAM)
         self.udp_sock.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
-        self.udp_sock.bind(("localhost",50100))
+        self.udp_sock.bind((self.ip_addr,0))
+        self.udp_porrt = self.udp_sock.getsockname()[1]
+
         self.refresh = False #alarms if refresh is needed
         self.in_process = False #alarms if any other function is waiting for a message before the ui checks if it needs a refresh
         self.large_data = False #alarms if there is a process of receving large data
@@ -36,14 +32,12 @@ class user_controller:
         self.sock.send(pickle.dumps(name))
         self.sock.close()
     
-    #the communication for this function will
-    #alwyas take place at port 50100 UDP
+
     def get_refresh_notification(self):
         print("waiting in refrehs")
         read,write,eror = select([self.udp_sock],[],[],1)
         print(read)
-        if len(read)==0:
-            print("nope")
+        if len(read)==0:        
             return
         data,adress = self.udp_sock.recvfrom(1054)
         print("got data in refresh")
@@ -115,6 +109,7 @@ class user_controller:
         print('from log in')
         msg = self.get_current_waiting_msg()
         print(msg)
+        self.sock.send(pickle.dumps(self.udp_porrt)) #sending the current UDP port the client will be waiting for msgs on
         self.in_process = False
         return msg
     
@@ -287,23 +282,6 @@ class user_controller:
         msg = self.get_current_waiting_msg()
         return msg
 
-    @staticmethod
-    def get_open_port():
-        start_port = 50010
-        for i in range(start_port,start_port+3000):
-            sock = socket(AF_INET,SOCK_DGRAM)
-            try:
-                sock.bind(("",i))
-                return i
-            except:
-                pass
-    
-    @staticmethod
-    def get_port():
-        starting_port = user_controller.get_open_port()
-        rand_num = random.randint(10,30)
-        if( starting_port+rand_num < 50500): return starting_port + rand_num
-        return starting_port-rand_num
 
 use = User("ayal","123",False)
 chat = chatroom(use,"Omer's WonderLand",[],1,[])                    

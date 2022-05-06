@@ -1,11 +1,9 @@
 import select
 from socket import *
-from classes.server.server import *
-from model import *
 
 
 
 
-db_conn = db()
-sr = server(db_conn)
-sr.recv_msgs()
+s = socket(AF_INET,SOCK_STREAM)
+s.bind(("localhost",0))
+print(s.getsockname()[1])

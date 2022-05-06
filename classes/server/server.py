@@ -18,19 +18,25 @@ class server:
                               #a room by name
     def __init__(self,db_conn:db):
         self.conn_sock = socket(AF_INET,SOCK_STREAM)
-        self.conn_sock.bind(("localhost",50000))
+        self.conn_sock.bind(("192.168.0.111",50000))
         self.conn_sock.listen(5)
         self.conn_sock.setsockopt(SOL_SOCKET,SO_REUSEADDR, True)
+
         self.all_sockets = [self.conn_sock]
+
         self.db_conn = db_conn
+
         self.current_user_chat_room_dict = {}
         self.current_user_socket_dict = {}
         self.users_time_dict = {}
+        self.name_udp_port_dict={}
         self.initialize_server_core_vars()
+
         self.rake_obj = rake_nltk.Rake('stop.txt')
+
         self.udp_sock = socket(AF_INET,SOCK_DGRAM)
         self.udp_sock.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
-        self.udp_sock.bind(("",50501))
+        self.udp_sock.bind(("192.168.0.111",0))
 
     '''
     core functions that the server uses
@@ -291,17 +297,20 @@ class server:
             check = self.db_conn.get_user(name)
             if(check=="key didn't have a value"):
                 sock.send(pickle.dumps(("no username","")))
-                return
-            if(password == check.password):
+                
+            elif(password == check.password):
                 if name in self.banned_users:
                     sock.send(pickle.dumps(('banned','')))
                 else:
                     sock.send(pickle.dumps(('ok',check)))
                     self.current_user_socket_dict[name] = sock
                     self.users_time_dict[name]=datetime.datetime.now()
-                    return
-            sock.send(pickle.dumps(("password is inccorect","")))
-    
+            else:        
+                sock.send(pickle.dumps(("password is inccorect","")))
+        udp_port = pickle.loads(sock.recv(1054))
+        print(f"finishing log in: {udp_port}")
+        self.name_udp_port_dict[name] = udp_port
+
     def chage_password(self,sock:socket,info:str):
         name_pattern = re.compile(r"name:<(.+?)>")
         new_pass_pattern = re.compile(r"password:<(.+?)>")
@@ -437,7 +446,7 @@ class server:
                 ip_addr,port = sock.getpeername()
                 print(name)
                 print('sent refresh msg to',ip_addr)
-                self.udp_sock.sendto(pickle.dumps("need refresh"),(ip_addr,50100))
+                self.udp_sock.sendto(pickle.dumps("need refresh"),(ip_addr,self.name_udp_port_dict[name]))
                
                 
     
@@ -517,11 +526,12 @@ class server:
         try:
             tmp = self.send_to_users_dict[name]
         except KeyError:
-            sockobj.send(pickle.dumps("user already has a message"))
+            sockobj.send(pickle.dumps("ok"))
+            return
 
         self.send_to_users_dict[name] = msg
         self.db_conn.set_send_to_user_dict(self.send_to_users_dict)
-        sockobj.send(pickle.dumps("ok"))    
+        sockobj.send(pickle.dumps("user already has a message"))    
 
         if msg=="ban":
             self.banned_users.append(name)
