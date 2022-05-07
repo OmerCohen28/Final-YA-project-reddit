@@ -21,6 +21,8 @@ class user_controller:
         self.udp_porrt = self.udp_sock.getsockname()[1]
 
         self.refresh = False #alarms if refresh is needed
+        self.banned = False #alarms the client if it has been banned
+        self.kicked = False #alarms the client if it has been kicked
         self.in_process = False #alarms if any other function is waiting for a message before the ui checks if it needs a refresh
         self.large_data = False #alarms if there is a process of receving large data
 
@@ -42,8 +44,14 @@ class user_controller:
         data,adress = self.udp_sock.recvfrom(1054)
         print("got data in refresh")
         data = pickle.loads(data)
+        print(f"data in refresh is {data}")
         if data == "need refresh":
             self.refresh = True
+        if data == "banned":
+            self.banned = True
+        if data=="kicked":
+            print("was told to get out")
+            self.kicked = True
 
     def get_current_waiting_msg(self):
         print('taking data')
@@ -110,8 +118,9 @@ class user_controller:
         msg = self.get_current_waiting_msg()
         print(msg)
         self.sock.send(pickle.dumps(self.udp_porrt)) #sending the current UDP port the client will be waiting for msgs on
+        msg_waiting = self.get_current_waiting_msg()
         self.in_process = False
-        return msg
+        return msg,msg_waiting
     
     def change_password(self,user:User,new_pass:str):
         self.sock.send(pickle.dumps(f"change password password:<{new_pass}> name:<{user.name}>"))
@@ -277,10 +286,6 @@ class user_controller:
                 new_dict[key] = room_score_dict[key]*100
         return new_dict
     
-    def check_for_msgs(self)->str:
-        self.sock.send(pickle.dumps("any messages for me?"))
-        msg = self.get_current_waiting_msg()
-        return msg
 
 
 use = User("ayal","123",False)

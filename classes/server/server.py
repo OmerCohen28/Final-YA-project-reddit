@@ -10,6 +10,7 @@ from os.path import exists
 import time
 import rake_nltk
 import re
+import _thread
 
 class server:
     curr_chat_id =0 #since the server gives the chat id, i created a class variable
@@ -53,10 +54,19 @@ class server:
             self.db_conn.set_current_chat_name_to_id_dict({})
         
         self.days_to_skip = self.db_conn.get_amount_of_days_to_skip()
+        if self.days_to_skip is None:
+            self.days_to_skip = 0
+            self.db_conn.set_amount_of_days_to_skip(0)
 
         self.send_to_users_dict = self.db_conn.get_send_to_user_dict()
+        if self.send_to_users_dict is None:
+            self.send_to_users_dict = {}
+            self.db_conn.set_send_to_user_dict({})
 
         self.banned_users = self.db_conn.get_banned_users()
+        if self.banned_users is None:
+            self.banned_users = []
+            self.db_conn.set_banned_users([])
     
     def enter_line_into_log(self,msg:str):
         with open('log.txt','a') as file:
@@ -165,9 +175,9 @@ class server:
     def get_name_to_id_chat_room_name_dict(self)->dict:
         result = {}
         for id_num in range(self.curr_chat_id):
+            chat_room = self.db_conn.get_chat(id_num)
             if isinstance(chat_room,str):
                 continue
-            chat_room = self.db_conn.get_chat(id_num)
             result[chat_room.name] = id_num
         return result
     
@@ -242,6 +252,7 @@ class server:
                             del self.current_user_chat_room_dict[user_leaving]
                             del self.current_user_socket_dict[user_leaving]
                             del self.users_time_dict[user_leaving]
+                            del self.name_udp_port_dict[user_leaving]
                             self.enter_line_into_log(f"{user_leaving} left")
                         except KeyError:
                             pass
@@ -264,10 +275,11 @@ class server:
                         self.return_user_chat_room_dict_to_admin(sockobj)
                     if(msg[0:8]=="add days"):
                         self.change_days(msg)
+                    if(msg=="get current days to skip"):
+                        sockobj.send(pickle.dumps(self.days_to_skip))
                     if(msg[0:12]=="msg for user"):
                         self.set_a_new_message_for_a_user(sockobj,msg)
-                    if(msg=="any messages for me?"):
-                        pass
+
 
 
     '''
@@ -310,6 +322,15 @@ class server:
         udp_port = pickle.loads(sock.recv(1054))
         print(f"finishing log in: {udp_port}")
         self.name_udp_port_dict[name] = udp_port
+        self.give_messages_to_user(name,sock)
+    
+    def give_messages_to_user(self,name:str,sock:socket):
+        try:
+            msg = self.send_to_users_dict[name]
+            sock.send(pickle.dumps(msg))
+            del self.send_to_users_dict[name]
+        except KeyError:
+            sock.send(pickle.dumps("no msg"))
 
     def chage_password(self,sock:socket,info:str):
         name_pattern = re.compile(r"name:<(.+?)>")
@@ -434,16 +455,19 @@ class server:
         print(new_msg.img_name)
         chat_room = new_msg.sent_in
         chat_room.msgs.append(new_msg)
+        chat_room.last_sent_time = datetime.datetime.now() + datetime.timedelta(days = int(self.days_to_skip))
         self.db_conn.insert_chat(chat_room.room_id,chat_room)
         self.notify_all_members_of_chatroom_for_new_msg(chat_room)
-        chat_room.last_sent_time = datetime.datetime.now() + datetime.timedelta(days = int(self.days_to_skip))
 
     def notify_all_members_of_chatroom_for_new_msg(self,chat_room):
         print('in refresh function')
         for name in self.current_user_chat_room_dict:
             if self.current_user_chat_room_dict[name] == str(chat_room.room_id):
                 sock = self.current_user_socket_dict[name]
-                ip_addr,port = sock.getpeername()
+                try:
+                    ip_addr,port = sock.getpeername()
+                except OSError:
+                    print(f"Failed, sock: {sock}")
                 print(name)
                 print('sent refresh msg to',ip_addr)
                 self.udp_sock.sendto(pickle.dumps("need refresh"),(ip_addr,self.name_udp_port_dict[name]))
@@ -509,6 +533,17 @@ class server:
         days_to_skip = re.findall(string=info,pattern=days_to_skip_pattern)[0]
         self.db_conn.set_amount_of_days_to_skip(days_to_skip)
         self.days_to_skip = days_to_skip
+        self.kick_every_online_user()
+    
+    def kick_every_online_user(self):
+        for name in self.current_user_socket_dict.keys():
+            sock = self.current_user_socket_dict[name]
+            try:
+                ip_addr,port = sock.getpeername()
+            except OSError:
+                print(f"Failed, sock: {sock}")
+                return
+            self.udp_sock.sendto(pickle.dumps("kicked"),(ip_addr,self.name_udp_port_dict[name]))
 
     def set_a_new_message_for_a_user(self,sockobj:socket,info:str):
         name_pattern = re.compile(r"name:<(.+?)>")
@@ -527,15 +562,30 @@ class server:
             tmp = self.send_to_users_dict[name]
         except KeyError:
             sockobj.send(pickle.dumps("ok"))
+            if msg=="ban":
+                self.banned_users.append(name)
+                self.db_conn.set_banned_users(self.banned_users)
+                _thread.start_new_thread(self.remove_user_from_all_chat_rooms,(name,))
+                if name in self.name_udp_port_dict.keys():
+                    sock = self.current_user_socket_dict[name]
+                    ip_addr,port = sock.getpeername()
+                    self.udp_sock.sendto(pickle.dumps("banned"),(ip_addr,self.name_udp_port_dict[name]))
+                    return
+            self.send_to_users_dict[name] = msg
+            self.db_conn.set_send_to_user_dict(self.send_to_users_dict)
             return
 
-        self.send_to_users_dict[name] = msg
-        self.db_conn.set_send_to_user_dict(self.send_to_users_dict)
         sockobj.send(pickle.dumps("user already has a message"))    
-
-        if msg=="ban":
-            self.banned_users.append(name)
-            self.db_conn.set_banned_users(self.banned_users)
+    
+    def remove_user_from_all_chat_rooms(self,name):
+        for i in range(int(self.curr_chat_id)):
+            chatroom = self.db_conn.get_chat(i)
+            users  = chatroom.members
+            for user in users:
+                if user.name == name:
+                    del chatroom.members[chatroom.members.index(user)]
+            self.db_conn.insert_chat(i,chatroom)
+        _thread.exit()
     
 
         
