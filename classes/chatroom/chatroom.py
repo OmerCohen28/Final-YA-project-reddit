@@ -14,6 +14,7 @@ class chatroom:
         self.banned_words = banned_words
         self.msgs = []
         self.last_sent_time = datetime.datetime.now()
+        self.create_time = datetime.datetime.now()
 
        
     

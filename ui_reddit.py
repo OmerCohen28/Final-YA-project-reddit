@@ -1,9 +1,11 @@
+import datetime
 from functools import partial
 from tkinter import *
 from tkinter import font
 from tkinter import messagebox
 from tkinter import filedialog
 from tkinter import ttk
+from tkcalendar import Calendar
 from PIL import ImageTk,Image
 import pickle
 from classes.chatroom.chatroom import chatroom
@@ -27,9 +29,10 @@ class ui_reddit:
         self.chat_img_lst = []
         self.chat_img_lst_index=0
         self.expand_msg_img_lst = []
-        self.expand_msg_ing_lst_index=0
+        self.expand_msg_ing_lst_index=0 
         self.current_chat_id = 0
         self.admin_controller = admin_controller()
+        self.stopped = False
 
 
     #general purpose functions
@@ -37,9 +40,16 @@ class ui_reddit:
         while True:
             self.user_controller.get_refresh_notification()
             if self.user_controller.refresh:
-                print("need refresh -------------------------")
                 self.refresh_btn.pack(side=TOP,anchor=E,pady=10)
                 self.user_controller.refresh = False
+            if self.user_controller.banned:
+                messagebox.showerror(title="This user is banned",message="This user was banned by an admin and is no longer active") 
+                self.banned_screen()
+                _thread.exit()
+            if self.stopped:
+                _thread.exit()
+            if self.user_controller.kicked:
+                self.handle_kick()
 
     def clear_screen(self) ->None:
         for widget in self.root.winfo_children():
@@ -52,6 +62,21 @@ class ui_reddit:
             self.user_controller.close_connection("guest")
         messagebox.showinfo(message="Thanks for being here")
         self.root.destroy()
+        self.stopped = True
+    
+    def handle_server_close(self):
+        messagebox.showinfo(message="Server has closed, shutting down")
+        self.root.destroy()
+        self.stopped = True      
+    
+    def handle_kick(self):
+        try:
+            self.user_controller.close_connection(self.user.name)
+        except AttributeError:
+            self.user_controller.close_connection("guest")
+        messagebox.showinfo(message="You have been kicked by an admin")
+        self.root.destroy()
+        self.stopped = True
 
     def create_top_frame(self):
         frame = Frame(self.root,bg="#6699ff")
@@ -60,10 +85,14 @@ class ui_reddit:
         self.logo_img = ImageTk.PhotoImage(Image.open('program_pics\\reddit-logo.png'))
         menu_btn = Button(frame,image=self.logo_img,borderwidth=0,bg="#6699ff",command=self.main_menu_screen)
         
+        today = datetime.date.today()
+        server_time = today + datetime.timedelta(days=self.admin_controller.days_to_skip)
+        date_str = f"{server_time.day}/{server_time.month}/{server_time.year}"
+
         if self.user.is_sys_admin:
-            user_info_lbl = Label(frame,text=f"User: {self.user.name} (admin), Rooms: {len(self.user.joined_room)}",bg="#6699ff",font=("Arial",15))
+            user_info_lbl = Label(frame,text=f"User: {self.user.name} (admin), Rooms: {len(self.user.joined_room)}, Date: {date_str}",bg="#6699ff",font=("Arial",15))
         else:
-            user_info_lbl = Label(frame,text=f"User: {self.user.name} , Rooms: {len(self.user.joined_room)}",bg="#6699ff",font=("Arial",15))
+            user_info_lbl = Label(frame,text=f"User: {self.user.name} , Rooms: {len(self.user.joined_room)}, Date: {date_str}",bg="#6699ff",font=("Arial",15))
         
         space_lbl = Label(frame,text="",bg="#6699ff")
 
@@ -326,8 +355,9 @@ class ui_reddit:
         user_stats_frame = self.user_stats(chatroom,packing_frame)
         user_stats_frame.pack(side=TOP,anchor=W,pady=5)
         #only for admin
-        swap_btn = Button(packing_frame,text="Swap View",command=lambda:self.admin_change_between_users_and_messages_in_a_room(chatroom,second_frame))
-        swap_btn.pack(side=TOP,anchor=W,pady=5)
+        if self.user.is_sys_admin:
+            swap_btn = Button(packing_frame,text="Swap View",command=lambda:self.admin_change_between_users_and_messages_in_a_room(chatroom,second_frame))
+            swap_btn.pack(side=TOP,anchor=W,pady=5)
 
         back_to_feed_btn = Button(packing_frame,text="<< Back To Feed",bg="#6666ff",fg="white",font=("Arial",15),command=self.main_menu_screen)
         back_to_feed_btn.pack(side=BOTTOM,anchor=W,padx=10)
@@ -566,16 +596,21 @@ class ui_reddit:
         pass
 
     def send_log_in_info(self):
-        msg = self.user_controller.log_in(self.name_entry_log_in.get(),self.password_entry_log_in.get())
-        print(msg)
+        result = self.user_controller.log_in(self.name_entry_log_in.get(),self.password_entry_log_in.get())
+        msg = result[0]
+        server_said = result[1]
         msg,user = msg[0],msg[1]
         if(msg == "no username"):
             messagebox.showerror(title="Log in failed",message="The username you enterd was inccorect, try again")     
         elif(msg=="password is inccorect"):
             messagebox.showerror(title="Log in failed",message="The password you enterd was inccorect, try again")     
         elif(msg=="banned"):
-            messagebox.showerror(title="This user is banned",message="This user was benned by an admin and is no longer active") 
+            messagebox.showerror(title="This user is banned",message="This user was banned by an admin and is no longer active") 
             self.banned_screen()
+        elif(msg=="warn"):
+            messagebox.showinfo(title="You have a message from the server",message="You have been warned by an admin, please watch your behavior")
+            self.user = user
+            self.main_menu_screen()
         else:
             self.user = user
             self.main_menu_screen()
@@ -599,13 +634,6 @@ class ui_reddit:
     
     def change_to_signup(self):
         self.sign_up_screen()
-
-    def check_for_messages(self):
-        msg = self.user_controller.get_current_waiting_msg()
-        if msg == "warn":
-            messagebox.showinfo(title="You have a message from the server",message="You have been warned by an admin, please watch your behavior")
-        if msg == "ban":
-            messagebox.showinfo(title="You have a message from the server",message="You have been banned by an admin, this user is not allowed in this app anymore")
 
     def banned_screen(self):
         self.clear_screen()
@@ -635,7 +663,7 @@ class ui_reddit:
         msg_lbl = Label(frame,text="Admin Options:",font=("Arial",15,font.BOLD))
         show_all_rooms_btn = Button(frame,text="Show all rooms",command=self.Do,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
         show_current_users_btn = Button(frame,text="Show all current online users",command=self.Do,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
-        change_date_btn = Button(frame,text="Modify the date of the app",command=self.Do,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
+        change_date_btn = Button(frame,text="Modify the date of the app",command=self.show_calendar,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
         change_app_settings_btn = Button(frame,text="Change the app settings",command=self.Do,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
 
         msg_lbl.pack(side=TOP)
@@ -958,11 +986,52 @@ class ui_reddit:
                 count+=1
         return count
 
-rot = Tk()
-ui = ui_reddit(rot)
+    def show_calendar(self):
+        top_level = Toplevel(self.root)
 
-ui.log_in_screen()
-_thread.start_new_thread(ui.refresh_chat_room,())
+        today = datetime.date.today()
+        server_date = today+datetime.timedelta(days=self.admin_controller.days_to_skip)
+
+        cal = Calendar(top_level,font=("Arial",14),selectmode = 'day',cursor = "hand1",year=server_date.year,month=server_date.month,day=server_date.day)
+        cal.pack(fill=BOTH,expand = TRUE)
+
+        submit_btn = Button(top_level,text="Submit",font=("Arial",15),command=lambda:self.ask_user_if_wants_to_proceed(cal.selection_get(),top_level))
+        submit_btn.pack(pady=10)
+    
+    def ask_user_if_wants_to_proceed(self,date,cal):
+        top_level = Toplevel(self.root)
+
+        msg_lbl = Label(top_level,text="The action you are going to take will kick all the users currently online, would you like to still do it?")
+        msg_lbl.grid(column=1,row=0,pady=10,padx=10)
+
+        yes_btn = Button(top_level,text="Yes!",command=lambda:self.send_date_modification_to_server(date,cal,top_level))
+        yes_btn.grid(column=0,row=1,pady=10,padx=10)
+
+        no_btn = Button(top_level,text="No!",command=lambda:top_level.destroy())
+        no_btn.grid(column=1,row=1,pady=10,padx=10)
 
 
-rot.mainloop()
+
+    def send_date_modification_to_server(self,new_date:datetime.date,top_level:Toplevel,parent:Toplevel):
+        parent.destroy()
+        self.admin_controller.get_current_days_to_skip()
+        delta =  new_date - datetime.date.today()
+        if delta.days < 0:
+            messagebox.showerror(title="Wrong date picked",message="You can not go back in time (although it would be cool)")
+            return
+        if delta.days - self.admin_controller.days_to_skip<0:
+            messagebox.showerror(title="Server already ahead",message="Another admin has already switched the server to a further date")
+            return
+        self.admin_controller.change_date_of_server(delta.days)
+        top_level.destroy()
+try:
+    rot = Tk()
+    ui = ui_reddit(rot)
+
+    ui.log_in_screen()
+    _thread.start_new_thread(ui.refresh_chat_room,())
+
+
+    rot.mainloop()
+except:
+    ui.handle_close()

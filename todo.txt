@@ -1,8 +1,6 @@
 
 TODO for the messages feature - 
 
-- add a live getting message, not just when user logges in, maybe UDP
-
 - after banning the user, remove him from all lists and stuff (for example so he won't show up in the users in a room list)
 
 
