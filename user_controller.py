@@ -41,6 +41,7 @@ class user_controller:
             return
         data,adress = self.udp_sock.recvfrom(1054)
         data = pickle.loads(data)
+        print(f"data in refresh is {data}")
         if data == "need refresh":
             self.refresh = True
         if data == "banned":

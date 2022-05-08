@@ -68,7 +68,10 @@ class ui_reddit:
     
     def handle_server_close(self):
         messagebox.showinfo(message="Server has closed, shutting down")
+<<<<<<< HEAD
         self.user_controller.sock.close()
+=======
+>>>>>>> 53dd7e8869ab725356a0a6cccc2a5ad1faaf6d68
         self.root.destroy()
         self.stopped = True      
     
@@ -1102,7 +1105,10 @@ class ui_reddit:
             return
         self.admin_controller.change_date_of_server(delta.days)
         top_level.destroy()
+<<<<<<< HEAD
 
+=======
+>>>>>>> 53dd7e8869ab725356a0a6cccc2a5ad1faaf6d68
 try:
     rot = Tk()
     ui = ui_reddit(rot)
@@ -1112,5 +1118,10 @@ try:
 
 
     rot.mainloop()
+<<<<<<< HEAD
 except ConnectionError:
     ui.handle_server_close()
+=======
+except:
+    ui.handle_close()
+>>>>>>> 53dd7e8869ab725356a0a6cccc2a5ad1faaf6d68

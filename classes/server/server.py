@@ -294,8 +294,11 @@ class server:
                         sockobj.send(pickle.dumps(self.days_to_skip))
                     if(msg[0:12]=="msg for user"):
                         self.set_a_new_message_for_a_user(sockobj,msg)
+<<<<<<< HEAD
                     if(msg=="getting info for all rooms"):
                         self.send_info_for_every_room(sockobj)
+=======
+>>>>>>> 53dd7e8869ab725356a0a6cccc2a5ad1faaf6d68
 
 
 
@@ -604,6 +607,7 @@ class server:
                     del chatroom.members[chatroom.members.index(user)]
             self.db_conn.insert_chat(i,chatroom)
         _thread.exit()
+<<<<<<< HEAD
     
     def send_info_for_every_room(self,sock:socket)->None:
         for id_num in range(self.curr_chat_id):
@@ -626,6 +630,8 @@ class server:
                 sock.send(pickle.dumps(lst))
                 msg = pickle.loads(sock.recv(1054))
                 
+=======
+>>>>>>> 53dd7e8869ab725356a0a6cccc2a5ad1faaf6d68
     
 
         

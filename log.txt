@@ -708,6 +708,7 @@ Recevied a log-in at 2022-05-07 21:54:16.428332
 Recevied a log-in at 2022-05-07 21:54:47.221406
 Recevied a log-in at 2022-05-07 21:55:03.414313
 Recevied a log-in at 2022-05-09 21:55:17.822636
+<<<<<<< HEAD
 Recevied a log-in at 2022-05-08 12:27:27.603926
 Recevied a log-in at 2022-05-10 12:27:43.086912
 Recevied a log-in at 2022-05-10 12:29:24.291424
@@ -823,3 +824,5 @@ Returned a room-name dict at 2022-05-17 17:24:15.393453
 Returned a room by it's ID at 2022-05-17 17:24:15.978501
 Added a user to a chatroom at 2022-05-17 17:24:18.423931
 Returned a room by it's ID at 2022-05-17 17:24:19.815381
+=======
+>>>>>>> 53dd7e8869ab725356a0a6cccc2a5ad1faaf6d68
