@@ -70,4 +70,27 @@ class admin_controller():
         result = self.user_controller.get_current_waiting_msg()
         return result
     
+    #the list retunred will contain lists of all chat_rooms data which is - 
+    '''
+    index 0 - name
+    index 1 - id 
+    index 2 - date created
+    index 3 - amount of messages
+    index 4 - amount of members
+    index 5 - creator's name
+    index 6 - days alive
+    '''
+    def get_all_rooms_info(self)->list[list[str]]:
+        self.user_controller.sock.send(pickle.dumps("chat id"))
+        curr_chat_id = self.user_controller.get_current_waiting_msg()
+        self.user_controller.sock.send(pickle.dumps("getting info for all rooms"))  
+        result = []
+        for id_num in range(curr_chat_id):
+            tmp_lst = self.user_controller.get_current_waiting_msg()
+            if not isinstance(tmp_lst,str):
+                result.append(tmp_lst)
+            self.user_controller.sock.send(pickle.dumps("ok"))
+        
+        return result
+    
 

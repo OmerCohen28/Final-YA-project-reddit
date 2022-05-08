@@ -42,6 +42,21 @@ class server:
     '''
     core functions that the server uses
     '''
+    def get_large_data(self,sock):
+        data = b""
+        while True:
+            print('loop')
+            packet = sock.recv(1054)
+            try:
+                print(packet.decode())
+            except:
+                pass
+            if packet == "stop".encode():
+                break
+            data+=packet
+        msg = pickle.loads(data)
+        return msg
+
     def initialize_server_core_vars(self):
         self.curr_chat_id = self.db_conn.get_current_chat_room_id()
         if self.curr_chat_id is None:
@@ -279,6 +294,8 @@ class server:
                         sockobj.send(pickle.dumps(self.days_to_skip))
                     if(msg[0:12]=="msg for user"):
                         self.set_a_new_message_for_a_user(sockobj,msg)
+                    if(msg=="getting info for all rooms"):
+                        self.send_info_for_every_room(sockobj)
 
 
 
@@ -372,8 +389,9 @@ class server:
 
     def get_new_room_and_add_to_db(self,sock:socket):
         sock.send(pickle.dumps("ok"))
-        new_room = pickle.loads(sock.recv(1054))
+        new_room = self.get_large_data(sock)
         new_room.last_sent_time = new_room.last_sent_time + datetime.timedelta(days=int(self.days_to_skip))
+        new_room.create_time = datetime.datetime.now() + datetime.timedelta(days=int(self.days_to_skip))
         user = new_room.creator
         user.joined_room.append(new_room)
         self.db_conn.update_user(user)
@@ -586,6 +604,28 @@ class server:
                     del chatroom.members[chatroom.members.index(user)]
             self.db_conn.insert_chat(i,chatroom)
         _thread.exit()
+    
+    def send_info_for_every_room(self,sock:socket)->None:
+        for id_num in range(self.curr_chat_id):
+            chat_room = self.db_conn.get_chat(id_num)
+            if isinstance(chat_room,str):
+                sock.send(pickle.dumps("expired"))
+                msg = pickle.loads(sock.recv(1054))
+            else:
+                today = datetime.datetime.now()
+                alive = today - chat_room.create_time
+                lst = [
+                    chat_room.name,
+                    chat_room.room_id,
+                    chat_room.create_time,
+                    len(chat_room.msgs),
+                    len(chat_room.members),
+                    chat_room.creator.name,
+                    alive.days
+                    ]
+                sock.send(pickle.dumps(lst))
+                msg = pickle.loads(sock.recv(1054))
+                
     
 
         

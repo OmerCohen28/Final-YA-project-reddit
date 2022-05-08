@@ -54,6 +54,10 @@ ttk.Button(root, text='Calendar', command=example1).pack(padx=10, pady=10)
 ttk.Button(root, text='DateEntry', command=example2).pack(padx=10, pady=10)
 #root.mainloop()
 
-root.mainloop()
+r = Redis()
 
+omer = pickle.loads(r.get("omer"))
+omer.is_sys_admin = True
+
+r.set("omer",pickle.dumps(omer))
 

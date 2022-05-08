@@ -36,15 +36,11 @@ class user_controller:
     
 
     def get_refresh_notification(self):
-        print("waiting in refrehs")
         read,write,eror = select([self.udp_sock],[],[],1)
-        print(read)
         if len(read)==0:        
             return
         data,adress = self.udp_sock.recvfrom(1054)
-        print("got data in refresh")
         data = pickle.loads(data)
-        print(f"data in refresh is {data}")
         if data == "need refresh":
             self.refresh = True
         if data == "banned":
@@ -116,7 +112,7 @@ class user_controller:
         self.sock.send(pickle.dumps('done'))
         print('from log in')
         msg = self.get_current_waiting_msg()
-        print(msg)
+        print("msg",msg)
         self.sock.send(pickle.dumps(self.udp_porrt)) #sending the current UDP port the client will be waiting for msgs on
         msg_waiting = self.get_current_waiting_msg()
         self.in_process = False
@@ -147,6 +143,8 @@ class user_controller:
             print('from create new room')
             self.get_current_waiting_msg()
             self.sock.send(pickle.dumps(new_chat))
+            time.sleep(0.5)
+            self.sock.send("stop".encode())
             self.in_process = False
             print('from create new room')
             return self.get_current_waiting_msg()

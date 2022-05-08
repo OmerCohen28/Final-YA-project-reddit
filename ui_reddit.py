@@ -1,5 +1,6 @@
 import datetime
 from functools import partial
+from operator import itemgetter
 from tkinter import *
 from tkinter import font
 from tkinter import messagebox
@@ -10,7 +11,7 @@ from PIL import ImageTk,Image
 import pickle
 from classes.chatroom.chatroom import chatroom
 from classes.message.message import message
-from classes.user.user import User
+from classes.user.user import User 
 from user_controller import user_controller
 from admin_controller import admin_controller
 import time
@@ -31,6 +32,7 @@ class ui_reddit:
         self.expand_msg_img_lst = []
         self.expand_msg_ing_lst_index=0 
         self.current_chat_id = 0
+        self.key = "members"
         self.admin_controller = admin_controller()
         self.stopped = False
 
@@ -66,6 +68,7 @@ class ui_reddit:
     
     def handle_server_close(self):
         messagebox.showinfo(message="Server has closed, shutting down")
+        self.user_controller.sock.close()
         self.root.destroy()
         self.stopped = True      
     
@@ -661,7 +664,7 @@ class ui_reddit:
     def admin_actions(self,container_frame:Frame):
         frame = Frame(container_frame)
         msg_lbl = Label(frame,text="Admin Options:",font=("Arial",15,font.BOLD))
-        show_all_rooms_btn = Button(frame,text="Show all rooms",command=self.Do,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
+        show_all_rooms_btn = Button(frame,text="Show all rooms",command=self.show_all_rooms_for_admin,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
         show_current_users_btn = Button(frame,text="Show all current online users",command=self.Do,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
         change_date_btn = Button(frame,text="Modify the date of the app",command=self.show_calendar,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
         change_app_settings_btn = Button(frame,text="Change the app settings",command=self.Do,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
@@ -896,9 +899,82 @@ class ui_reddit:
         return result
     
     #admin function group
-    def show_all_rooms_for_admin(self,room_lst:list[chatroom]):
+    def show_all_rooms_for_admin(self):
         self.clear_screen()
+        top_frame = self.create_top_frame()
+        top_frame.config(height=350)
+        top_frame.pack(side=TOP,fill=X)
+
+        main_frame = Frame(self.root,bg="white")
+        canvas = Canvas(main_frame,width="10",bg="white")
+        scroll_bar = Scrollbar(main_frame,orient=VERTICAL,command=canvas.yview)
+        canvas.configure(yscrollcommand=scroll_bar.set)
+        canvas.bind("<Configure>",lambda event: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.bind_all("<MouseWheel>",lambda e:self.on_mousewheel(e,canvas))
+        second_frame = Frame(canvas,bg="white")
+        canvas.create_window((200,0),window=second_frame,anchor=NW)
+
+        msg_lbl = Label(canvas,text=f"All rooms sorted by {self.key}",font=("Arial",15,font.BOLD))
+        msg_lbl.pack()
+
+        swap_btn = Button(canvas,text="Swap between members/date",font=("Arial",15),command=self.swap_view_for_room_key)
+        swap_btn.pack(side=RIGHT,anchor=N,padx=10,pady=10)
+
+        room_frame_lst = self.make_sorted_room_lst(second_frame)
+
+        for frame in room_frame_lst:
+            frame.pack(fill=BOTH,pady=10,expand=TRUE)
+
+        scroll_bar.pack(side=RIGHT,fill=Y)
+        canvas.pack(fill=BOTH,expand=TRUE)
+        main_frame.pack(fill=BOTH,expand=TRUE)
     
+    def swap_view_for_room_key(self):
+        if self.key=="members":
+            self.key = "date"
+            self.show_all_rooms_for_admin()
+        else:
+            self.key="members"
+            self.show_all_rooms_for_admin()
+
+    def make_sorted_room_lst(self,container_frame:Frame):
+        result = []
+        count=0
+        chat_room_info_lst = self.admin_controller.get_all_rooms_info()
+        if self.key=="members":
+            chat_room_info_lst = sorted(chat_room_info_lst,key=itemgetter(4),reverse=True)
+        else:
+            chat_room_info_lst = sorted(chat_room_info_lst,key = itemgetter(6),reverse=True)
+
+        for chat_room_info in chat_room_info_lst:
+            if count%2==0:
+                color = "#C8C8C8"
+            else:
+                color = "#F0F0F0"
+            
+            frame = Frame(container_frame,bg=color,highlightbackground="#0066FF",highlightthickness=2,width=300)
+
+            name_btn = Button(frame,text=f"Room/{chat_room_info[0]}",font=("Arial",15,font.BOLD),command=partial(self.manage_join_room_by_id,chat_room_info[1]))
+            created_by_lbl = Label(frame,text=f"Created by: {chat_room_info[5]}",font=("Arial",13))
+            created_on_lbl = Label(frame,text=f"Room active since {chat_room_info[2].day}/{chat_room_info[2].month}/{chat_room_info[2].year}",font=("Arial",13))
+            msgs_sent_lbl = Label(frame,text=f"{chat_room_info[3]} messages sent so far",font=("Arial",13))
+            members_lbl = Label(frame,text=f"{chat_room_info[4]} members joined so far",font=("Arial",13))
+            go_to_room_btn = Button(frame,text="Go to room",font=("Arial",13),command=partial(self.manage_join_room_by_id,chat_room_info[1]))
+
+            space_lbl = Label(frame,text="",width=100)
+            space_lbl.pack()
+            name_btn.pack(side=TOP,anchor=W,padx=10,pady=10)
+            created_by_lbl.pack(side=TOP,anchor=W,padx=10,pady=10)
+            created_on_lbl.pack(side=TOP,anchor=W,padx=10,pady=10)
+            msgs_sent_lbl.pack(side=TOP,anchor=W,padx=10,pady=10)
+            members_lbl.pack(side=TOP,anchor=W,padx=10,pady=10)
+            go_to_room_btn.pack(side=TOP,anchor=E,padx=10,pady=10)
+            
+            result.append(frame)
+            count+=1
+
+        return result
+
     def show_all_current_users_for_admin(self):
         self.clear_screen()
         top_frame = self.create_top_frame()
@@ -920,6 +996,8 @@ class ui_reddit:
                 color = "#F0F0F0"
             
             frame = Frame(container_frame,bg=color,highlightbackground="#0066FF",highlightthickness=2,width=300)
+
+
             #what data i would like to show to the admin will have to be implemented here
             #take a refrence in line 826 if i forget how to do this.
     
@@ -1024,6 +1102,7 @@ class ui_reddit:
             return
         self.admin_controller.change_date_of_server(delta.days)
         top_level.destroy()
+
 try:
     rot = Tk()
     ui = ui_reddit(rot)
@@ -1033,5 +1112,5 @@ try:
 
 
     rot.mainloop()
-except:
-    ui.handle_close()
+except ConnectionError:
+    ui.handle_server_close()

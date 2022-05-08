@@ -4,6 +4,19 @@ TODO for the messages feature -
 - after banning the user, remove him from all lists and stuff (for example so he won't show up in the users in a room list)
 
 
+UI to change - 
+    search result UI
+
+    swap view UI
+
+    user list in chatroom UI
+
+    ask for confirmation to kick users UI
+
+    
+
+
+
 after that -
 
         remove the option for users to choose their own topics for their chatroom
