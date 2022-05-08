@@ -1,4 +1,6 @@
 from socket import *
+import ssl
+import warnings
 import pickle
 from classes.user.user import User
 from classes.chatroom.chatroom import chatroom
@@ -10,6 +12,8 @@ from select import select
 class user_controller:
     def __init__(self):
         self.ip_addr = "192.168.0.111"
+        warnings.filterwarnings("ignore",category=DeprecationWarning)
+        #self.sock = ssl.wrap_socket(socket(AF_INET,SOCK_STREAM),server_side=False)
         self.sock = socket(AF_INET,SOCK_STREAM)
         self.sock.setsockopt(SOL_SOCKET,SO_REUSEADDR, True)
         self.sock.bind((self.ip_addr,0))
@@ -54,7 +58,7 @@ class user_controller:
         print('taking data')
         if not self.large_data:
             try:
-                read,write,eror = select([self.sock],[],[],2)
+                read,write,eror = select([self.sock],[],[],4)
                 msg = pickle.loads(read[0].recv(1054))
                 print('got it')
                 print(msg)
@@ -112,7 +116,7 @@ class user_controller:
             print(new_msg)
         self.sock.send(pickle.dumps('done'))
         print('from log in')
-        msg = self.get_current_waiting_msg()
+        msg = self.get_large_data()
         print("msg",msg)
         self.sock.send(pickle.dumps(self.udp_porrt)) #sending the current UDP port the client will be waiting for msgs on
         msg_waiting = self.get_current_waiting_msg()

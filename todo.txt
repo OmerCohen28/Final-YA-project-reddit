@@ -3,6 +3,11 @@ TODO for the messages feature -
 
 - after banning the user, remove him from all lists and stuff (for example so he won't show up in the users in a room list)
 
+TODO what's left? - 
+    - overhall the key words system, instead of calcing it evrytime, save it into the chatroom evrytime a new message is added 
+        as a tupple/dict of word-score
+    - make a window to show the admin the current top 20 words, give him an option of not allowing these words as actual key words
+    - make a window for admin to make words that are not allowed to be used as key words server wide
 
 UI to change - 
     search result UI
@@ -13,17 +18,16 @@ UI to change -
 
     ask for confirmation to kick users UI
 
-    
+    show all rooms for admin UI
+
+    show all current online users for admin UI
+
 
 
 
 after that -
 
         remove the option for users to choose their own topics for their chatroom
-
-        add date calendar thingy from test.py (example1 function)
-
-        add ons for the app
 
         look again at text analaizing and optimize it
 
@@ -32,6 +36,3 @@ after that -
 not urgent -
     -add an icon to the app
 
-
-
-check if user is already logged on before letting him log in

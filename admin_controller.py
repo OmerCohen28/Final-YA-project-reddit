@@ -93,4 +93,22 @@ class admin_controller():
         
         return result
     
+    '''
+    index 0 - name
+    index 1 - delta time represnting time online
+    index 2 - current room
+    '''
+    def get_all_users_info(self)->list[list]:
+        self.user_controller.sock.send(pickle.dumps("getting info for all users"))
+        amount_of_users = self.user_controller.get_current_waiting_msg()
+        self.user_controller.sock.send(pickle.dumps("ok"))
+        print("amount of users",amount_of_users)
+        result = []
+        tmp = []
+        for i in range(amount_of_users):
+            tmp = pickle.loads(self.user_controller.sock.recv(1054))
+            self.user_controller.sock.send(pickle.dumps("ok"))
+            print("tmp",tmp)
+            result.append(tmp)
+        return result
 

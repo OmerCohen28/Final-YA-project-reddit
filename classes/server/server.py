@@ -1,6 +1,8 @@
 import datetime
 from itertools import count
 from socket import *
+import ssl
+import warnings
 from classes.chatroom.chatroom import chatroom
 from classes.user.user import User
 from model import db
@@ -18,6 +20,8 @@ class server:
     chat_name_to_id_dict = {} #dict to help convert chat_room names to id, used when getting
                               #a room by name
     def __init__(self,db_conn:db):
+        warnings.filterwarnings("ignore",category=DeprecationWarning)
+        #self.conn_sock = ssl.wrap_socket(socket(AF_INET,SOCK_STREAM), server_side=True,certfile="cert.pem",keyfile="key.pem")
         self.conn_sock = socket(AF_INET,SOCK_STREAM)
         self.conn_sock.bind(("192.168.0.111",50000))
         self.conn_sock.listen(5)
@@ -263,12 +267,21 @@ class server:
                     if(msg=="leaving"):
                         sockobj.send(pickle.dumps("who?"))
                         user_leaving = pickle.loads(sockobj.recv(1054))
+                        self.enter_line_into_log(f"{user_leaving} left")
                         try:
                             del self.current_user_chat_room_dict[user_leaving]
+                        except KeyError:
+                            pass
+                        try:
                             del self.current_user_socket_dict[user_leaving]
+                        except KeyError:
+                            pass
+                        try:
                             del self.users_time_dict[user_leaving]
-                            del self.name_udp_port_dict[user_leaving]
-                            self.enter_line_into_log(f"{user_leaving} left")
+                        except KeyError:
+                            pass
+                        try:
+                            del self.name_udp_port_dict[user_leaving]                            
                         except KeyError:
                             pass
                     if(msg=="search"):
@@ -294,11 +307,10 @@ class server:
                         sockobj.send(pickle.dumps(self.days_to_skip))
                     if(msg[0:12]=="msg for user"):
                         self.set_a_new_message_for_a_user(sockobj,msg)
-<<<<<<< HEAD
                     if(msg=="getting info for all rooms"):
                         self.send_info_for_every_room(sockobj)
-=======
->>>>>>> 53dd7e8869ab725356a0a6cccc2a5ad1faaf6d68
+                    if(msg=="getting info for all users"):
+                        self.send_info_for_every_user(sockobj)
 
 
 
@@ -326,6 +338,7 @@ class server:
         sock.send(pickle.dumps("ok"))
         end = pickle.loads(sock.recv(1054))
         if(end=="done"):
+            print("in end if")
             check = self.db_conn.get_user(name)
             if(check=="key didn't have a value"):
                 sock.send(pickle.dumps(("no username","")))
@@ -334,11 +347,17 @@ class server:
                 if name in self.banned_users:
                     sock.send(pickle.dumps(('banned','')))
                 else:
-                    sock.send(pickle.dumps(('ok',check)))
-                    self.current_user_socket_dict[name] = sock
-                    self.users_time_dict[name]=datetime.datetime.now()
+                    print(self.users_time_dict.keys())
+                    if name in self.users_time_dict.keys():
+                        sock.send(pickle.dumps(("User already in use","")))
+                    else:
+                        sock.send(pickle.dumps(('ok',check)))
+                        self.current_user_socket_dict[name] = sock
+                        self.users_time_dict[name]=datetime.datetime.now()
             else:        
                 sock.send(pickle.dumps(("password is inccorect","")))
+        time.sleep(0.5)
+        sock.send("stop".encode())
         udp_port = pickle.loads(sock.recv(1054))
         print(f"finishing log in: {udp_port}")
         self.name_udp_port_dict[name] = udp_port
@@ -601,13 +620,16 @@ class server:
     def remove_user_from_all_chat_rooms(self,name):
         for i in range(int(self.curr_chat_id)):
             chatroom = self.db_conn.get_chat(i)
-            users  = chatroom.members
+            try:
+                users  = chatroom.members
+            except AttributeError:
+                continue
             for user in users:
                 if user.name == name:
                     del chatroom.members[chatroom.members.index(user)]
+                    print("deleted from",chatroom.name)
             self.db_conn.insert_chat(i,chatroom)
         _thread.exit()
-<<<<<<< HEAD
     
     def send_info_for_every_room(self,sock:socket)->None:
         for id_num in range(self.curr_chat_id):
@@ -628,10 +650,32 @@ class server:
                     alive.days
                     ]
                 sock.send(pickle.dumps(lst))
-                msg = pickle.loads(sock.recv(1054))
-                
-=======
->>>>>>> 53dd7e8869ab725356a0a6cccc2a5ad1faaf6d68
+                msg = sock.recv(1054)
+        
+    def send_info_for_every_user(self,sock:socket) ->None:
+        print(self.users_time_dict.keys())
+        sock.send(pickle.dumps(len(self.users_time_dict.keys())))
+        msg = sock.recv(1054)
+        for user in self.users_time_dict.keys():
+            try:
+                room_id = self.current_user_chat_room_dict[user]
+                room_name = self.db_conn.get_chat(room_id).name
+                room = f"User currently in Room/{room_name}"
+            except KeyError:
+                room = "User currently not in a room"
+
+            now = datetime.datetime.now()
+            delta = now - self.users_time_dict[user]
+            time_connected = f"User has been connected for {delta.total_seconds()//60}:{delta.total_seconds()%60}"
+
+            lst = [
+                user,
+                time_connected,
+                room
+            ]
+            sock.send(pickle.dumps(lst))
+            msg = sock.recv(1054)        
+
     
 
         

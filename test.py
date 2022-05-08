@@ -54,13 +54,8 @@ ttk.Button(root, text='Calendar', command=example1).pack(padx=10, pady=10)
 ttk.Button(root, text='DateEntry', command=example2).pack(padx=10, pady=10)
 #root.mainloop()
 
-root.mainloop()
+r = Redis()
 
-<<<<<<< HEAD
-omer = pickle.loads(r.get("omer"))
-omer.is_sys_admin = True
-
-r.set("omer",pickle.dumps(omer))
-=======
->>>>>>> 53dd7e8869ab725356a0a6cccc2a5ad1faaf6d68
-
+chat_room = pickle.loads(r.get("6"))
+for member in chat_room.members:
+    print(member.name)

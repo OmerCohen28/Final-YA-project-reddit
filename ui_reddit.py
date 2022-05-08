@@ -68,10 +68,7 @@ class ui_reddit:
     
     def handle_server_close(self):
         messagebox.showinfo(message="Server has closed, shutting down")
-<<<<<<< HEAD
         self.user_controller.sock.close()
-=======
->>>>>>> 53dd7e8869ab725356a0a6cccc2a5ad1faaf6d68
         self.root.destroy()
         self.stopped = True      
     
@@ -617,6 +614,8 @@ class ui_reddit:
             messagebox.showinfo(title="You have a message from the server",message="You have been warned by an admin, please watch your behavior")
             self.user = user
             self.main_menu_screen()
+        elif(msg=="User already in use"):
+            messagebox.showerror(title="User already in use",message="The user you are trying access to is already in use")
         else:
             self.user = user
             self.main_menu_screen()
@@ -668,7 +667,7 @@ class ui_reddit:
         frame = Frame(container_frame)
         msg_lbl = Label(frame,text="Admin Options:",font=("Arial",15,font.BOLD))
         show_all_rooms_btn = Button(frame,text="Show all rooms",command=self.show_all_rooms_for_admin,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
-        show_current_users_btn = Button(frame,text="Show all current online users",command=self.Do,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
+        show_current_users_btn = Button(frame,text="Show all current online users",command=self.show_all_current_users_for_admin,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
         change_date_btn = Button(frame,text="Modify the date of the app",command=self.show_calendar,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
         change_app_settings_btn = Button(frame,text="Change the app settings",command=self.Do,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
 
@@ -847,6 +846,13 @@ class ui_reddit:
         if len(title) > 60:
             messagebox.showerror(title="title is too long",message="the title is not allowed to be over 60 chars")
             return
+        
+        words = msg.split(" ")
+        for word in words:
+            if word in chat_room.banned_words:
+                messagebox.showerror(title = "bad message" ,message = "Your message contains a banned word and is not allowed to apper in this chat room")
+                return
+
         self.user_controller.create_message_and_sent_to_server(name,msg,chat_room,img_and_path,title)
         top_level.destroy()
 
@@ -987,12 +993,31 @@ class ui_reddit:
         msg_lbl= Label(self.root,text="All current online users",font=("Arial",15,font.BOLD))
         msg_lbl.pack(side=TOP)
 
-        frmae_lst = self.Do()
-    
-    def make_users_frame_lst(self,container_frame:Frame,users_lst:list[User])->list[Frame]:
+        main_frame = Frame(self.root,bg="white")
+        canvas = Canvas(main_frame,width="10",bg="white")
+        scroll_bar = Scrollbar(main_frame,orient=VERTICAL,command=canvas.yview)
+        canvas.configure(yscrollcommand=scroll_bar.set)
+        canvas.bind("<Configure>",lambda event: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.bind_all("<MouseWheel>",lambda e:self.on_mousewheel(e,canvas))
+        second_frame = Frame(canvas,bg="white")
+        canvas.create_window((200,0),window=second_frame,anchor=NW)
+
+        frame_lst = self.make_users_frame_lst(second_frame)
+
+        for frame in frame_lst:
+            frame.pack(fill=BOTH,pady=10,expand=TRUE)
+
+
+        scroll_bar.pack(side=RIGHT,fill=Y)
+        canvas.pack(fill=BOTH,expand=TRUE)
+        main_frame.pack(fill=BOTH,expand=TRUE)
+
+
+    def make_users_frame_lst(self,container_frame:Frame)->list[Frame]:
         result = []
+        user_info_lst = self.admin_controller.get_all_users_info()
         count=0
-        for user in users_lst:
+        for user_info in user_info_lst:
             if count%2==0:
                 color = "#C8C8C8"
             else:
@@ -1000,9 +1025,19 @@ class ui_reddit:
             
             frame = Frame(container_frame,bg=color,highlightbackground="#0066FF",highlightthickness=2,width=300)
 
+            name_lbl = Label(frame,text=f"User/{user_info[0]}",font=("Arial",15))
+            time_lbl = Label(frame,text=user_info[1],font=("Arial",15))
+            room_lbl = Label(frame,text=user_info[2],font=("Arial",15))
+            space_lbl = Label(frame,text="",width=100)
 
-            #what data i would like to show to the admin will have to be implemented here
-            #take a refrence in line 826 if i forget how to do this.
+            space_lbl.pack()
+            name_lbl.pack(side=TOP,anchor=W,pady=10,padx=10)
+            time_lbl.pack(side=TOP,anchor=W,pady=10,padx=10)
+            room_lbl.pack(side=TOP,anchor=W,pady=10,padx=10)
+
+            result.append(frame)
+           
+        return result
     
     def admin_change_between_users_and_messages_in_a_room(self,chatroom,frame:Frame):
         for widgets in frame.winfo_children():
@@ -1105,10 +1140,6 @@ class ui_reddit:
             return
         self.admin_controller.change_date_of_server(delta.days)
         top_level.destroy()
-<<<<<<< HEAD
-
-=======
->>>>>>> 53dd7e8869ab725356a0a6cccc2a5ad1faaf6d68
 try:
     rot = Tk()
     ui = ui_reddit(rot)
@@ -1118,10 +1149,5 @@ try:
 
 
     rot.mainloop()
-<<<<<<< HEAD
 except ConnectionError:
     ui.handle_server_close()
-=======
-except:
-    ui.handle_close()
->>>>>>> 53dd7e8869ab725356a0a6cccc2a5ad1faaf6d68
