@@ -1088,3 +1088,6 @@ Returned a room by it's ID at 2022-05-09 19:06:32.855684
 Recevied a new message at 2022-05-09 19:06:40.975020
 Returned a room by it's ID at 2022-05-09 19:06:42.262443
 omer left at 2022-05-09 19:06:46.059608
+Recevied a log-in at 2022-05-09 19:08:15.450183
+Returned a room by it's ID at 2022-05-09 19:08:17.719629
+omer left at 2022-05-09 19:08:22.165925

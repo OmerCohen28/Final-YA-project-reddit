@@ -4,15 +4,14 @@ TODO for the messages feature -
 - after banning the user, remove him from all lists and stuff (for example so he won't show up in the users in a room list)
 
 TODO what's left? - 
-    - overhall the key words system, instead of calcing it evrytime, save it into the chatroom evrytime a new message is added 
-        as a tupple/dict of word-score
-    - make a window to show the admin the current top 20 words, give him an option of not allowing these words as actual key words
     - make a window for admin to make words that are not allowed to be used as key words server wide
 
 UI to change - 
     search result UI
 
-    swap view UI
+    swap view in chat screen btn UI
+
+    show keywords in chat screen btn UI
 
     user list in chatroom UI
 
@@ -22,7 +21,13 @@ UI to change -
 
     show all current online users for admin UI
 
-
+To Test!! - 
+    - after logging out as a user, check if server allows you to log back in (assume no crash and normal exit)
+    - show all keywords for rooms, check wether key words are being added and showed 
+    - live messages and notif for users
+    - time change
+    - show all users in chat room
+    - show all current online users
 
 
 after that -
