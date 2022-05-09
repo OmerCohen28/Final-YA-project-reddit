@@ -289,6 +289,21 @@ class user_controller:
                 new_dict[key] = room_score_dict[key]*100
         return new_dict
     
+    def make_dict_score_be_precent_for_words(self,room_score_dict:dict[str:int]) ->dict[str:int]:
+        all_values = room_score_dict.values()
+        print(all_values)
+        try:
+            max_score = max(all_values)
+        except ValueError:
+            return {}
+        new_dict = {}
+        for key in room_score_dict:
+            try:
+                new_dict[key] = room_score_dict[key]*100//max_score
+            except ZeroDivisionError:
+                new_dict[key] = room_score_dict[key]*100
+        return new_dict
+    
 
 
 use = User("ayal","123",False)

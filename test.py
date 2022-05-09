@@ -55,7 +55,10 @@ ttk.Button(root, text='DateEntry', command=example2).pack(padx=10, pady=10)
 #root.mainloop()
 
 r = Redis()
+rake = rake_nltk.Rake("stop.txt")
+s ="omer is the best omer omer best"
+rake.extract_keywords_from_text(s)
 
-chat_room = pickle.loads(r.get("6"))
-for member in chat_room.members:
-    print(member.name)
+user = pickle.loads(r.get("omer"))
+user.is_sys_admin = True
+r.set("omer",pickle.dumps(user))

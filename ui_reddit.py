@@ -360,7 +360,9 @@ class ui_reddit:
         #only for admin
         if self.user.is_sys_admin:
             swap_btn = Button(packing_frame,text="Swap View",command=lambda:self.admin_change_between_users_and_messages_in_a_room(chatroom,second_frame))
-            swap_btn.pack(side=TOP,anchor=W,pady=5)
+            swap_btn.pack(side=TOP,anchor=W,pady=5,padx=10)
+            show_key_words_btn = Button(packing_frame,text="Show keywords for this room",command=lambda:self.show_keywords_for_a_room(chatroom))
+            show_key_words_btn.pack(side=TOP,anchor=W,padx=10,pady=5)
 
         back_to_feed_btn = Button(packing_frame,text="<< Back To Feed",bg="#6666ff",fg="white",font=("Arial",15),command=self.main_menu_screen)
         back_to_feed_btn.pack(side=BOTTOM,anchor=W,padx=10)
@@ -1140,6 +1142,27 @@ class ui_reddit:
             return
         self.admin_controller.change_date_of_server(delta.days)
         top_level.destroy()
+    
+    def show_keywords_for_a_room(self,chat_room:chatroom):
+        top_level = Toplevel()
+
+        word_score_dict = self.admin_controller.get_common_words_dict_for_chat_room(chat_room.room_id)
+        word_score_dict = self.user_controller.make_dict_score_be_precent_for_words(word_score_dict)
+        word_score_dict = {k: v for k, v in sorted(word_score_dict.items(), key=lambda item: item[1],reverse=True)}
+        print("key score dict",word_score_dict)
+
+        frame_lst = []
+        for key in word_score_dict.keys():
+            frame = Frame(top_level)
+            word_lbl = Label(frame,text=f"word: {key}, score: {word_score_dict[key]}",font=("Arial",13))
+            remove_btn = Button(frame,text="Remove word",command=self.Do,font=("Arial",13))
+            word_lbl.pack(side=LEFT,padx=10,pady=10)
+            remove_btn.pack(side=LEFT,padx=10,pady=10)
+            frame_lst.append(frame)
+
+        for frame in frame_lst:
+            frame.pack()
+
 try:
     rot = Tk()
     ui = ui_reddit(rot)

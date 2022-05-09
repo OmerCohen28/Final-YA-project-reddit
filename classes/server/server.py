@@ -109,21 +109,33 @@ class server:
             id_text_dict[id_num] = text
         return id_text_dict
 
+    def remove_unwanted_words_from_chat_room(self,text:str,chat_room:chatroom)->str:
+        for removed_word in chat_room.removed_common_words:
+            text = text.replace(removed_word,".")
+        return text
     def get_word_score_dict_for_chat_room(self,id_num) ->dict:
         id_text_dict = self.get_all_words_from_chats()
         text = id_text_dict[id_num]
+        chat_room = self.db_conn.get_chat(id_num)
+        text = self.remove_unwanted_words_from_chat_room(text,chat_room)
         self.rake_obj.extract_keywords_from_text(text)
-        word_score_dict = self.rake_obj.get_word_degrees()
+        word_score_dict = dict(self.rake_obj.get_word_degrees())
+        print("rake calc word score dict",word_score_dict)
         return word_score_dict
 
 
     def clac_the_score_of_a_word_in_chat(self,id_num:int,word:str)->int:
         id_text_dict = self.get_all_words_from_chats()
         text = id_text_dict[id_num]
+        chat_room = self.db_conn.get_chat(id_num)
+        text = self.remove_unwanted_words_from_chat_room(text,chat_room)
         self.rake_obj.extract_keywords_from_text(text)
-        word_score_dict = self.rake_obj.get_word_degrees()
-        return word_score_dict[word]
-    
+        word_score_dict = dict(self.rake_obj.get_word_degrees())
+        try:
+            return word_score_dict[word]
+        except KeyError:
+            return 0
+
     def make_room_score_dict(self,keyword:str):
         final_dict = {}
         for i in range(self.curr_chat_id):
@@ -311,6 +323,14 @@ class server:
                         self.send_info_for_every_room(sockobj)
                     if(msg=="getting info for all users"):
                         self.send_info_for_every_user(sockobj)
+                    if(msg[0:16]=="get common words"):
+                        id_num_pattern = re.compile(r"id:<(\d+)>")
+                        id_num = re.findall(string = msg,pattern = id_num_pattern)[0]
+                        print("id num",id_num)
+                        chat_room = self.db_conn.get_chat(id_num)
+                        sockobj.send(pickle.dumps(chat_room.common_words))
+                        time.sleep(0.5)
+                        sockobj.send("stop".encode())
 
 
 
@@ -493,9 +513,14 @@ class server:
                 new_msg.img_name = new_msg.img_name[:new_msg.img_name.find(".")]+f'1.{extension_name}'
             self.get_picture_and_save(sock,new_msg.img_name)
         print(new_msg.img_name)
+
         chat_room = new_msg.sent_in
         chat_room.msgs.append(new_msg)
         chat_room.last_sent_time = datetime.datetime.now() + datetime.timedelta(days = int(self.days_to_skip))
+        
+        self.db_conn.insert_chat(chat_room.room_id,chat_room)
+        chat_room.common_words = self.get_word_score_dict_for_chat_room(chat_room.room_id)
+
         self.db_conn.insert_chat(chat_room.room_id,chat_room)
         self.notify_all_members_of_chatroom_for_new_msg(chat_room)
 

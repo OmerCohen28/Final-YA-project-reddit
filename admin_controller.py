@@ -11,9 +11,6 @@ class admin_controller():
         self.user_controller = user_controller()
         self.get_current_days_to_skip()
     
-    def show_all_rooms_by_key_word(self,keyword:str):
-        return self.user_controller.send_and_recv_search_results(keyword)
-    
     def get_all_rooms_from_server(self):
         self.user_controller.sock.send(pickle.dumps("chat id"))
         curr_chat_id = self.user_controller.get_current_waiting_msg()
@@ -111,4 +108,9 @@ class admin_controller():
             print("tmp",tmp)
             result.append(tmp)
         return result
+    
+    def get_common_words_dict_for_chat_room(self,id_num:int)->dict:
+        self.user_controller.sock.send(pickle.dumps(f"get common words for id:<{id_num}>"))
+        word_score_dict = self.user_controller.get_large_data()
+        return word_score_dict
 

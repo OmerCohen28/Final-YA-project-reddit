@@ -62,21 +62,24 @@ class db:
             x = int(days)
             return days
         except:
-            return 0
+            return None
     
     def get_send_to_user_dict(self)->dict[str:str]:
         try:
             result = pickle.loads(self.r.get("send to user dict"))
             return result
-        except TypeError:
-            return {}
+        except:
+            return None
     
     def set_send_to_user_dict(self,dict_to_save):
         self.r.set("send to user dict",pickle.dumps(dict_to_save))
     
     def get_banned_users(self)->list[str]:
-        return pickle.loads(self.r.get("banned list"))
-    
+        try:
+            return pickle.loads(self.r.get("banned list"))
+        except:
+            return None
+
     def set_banned_users(self,lst):
         self.r.set("banned list",pickle.dumps(lst))
         

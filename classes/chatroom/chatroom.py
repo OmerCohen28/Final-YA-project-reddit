@@ -10,7 +10,8 @@ class chatroom:
         self.current_members = 0
         self.members = [creator]
         self.room_id = room_id
-        self.common_words = []
+        self.common_words = {}
+        self.removed_common_words = []
         self.banned_words = banned_words
         self.msgs = []
         self.last_sent_time = datetime.datetime.now()
