@@ -43,7 +43,6 @@ class ui_reddit:
             self.user_controller.get_refresh_notification()
             if self.user_controller.refresh:
                 self.refresh_btn.pack(side=TOP,anchor=E,pady=10)
-                self.user_controller.refresh = False
             if self.user_controller.banned:
                 messagebox.showerror(title="This user is banned",message="This user was banned by an admin and is no longer active") 
                 self.banned_screen()
@@ -92,7 +91,9 @@ class ui_reddit:
         server_time = today + datetime.timedelta(days=self.admin_controller.days_to_skip)
         date_str = f"{server_time.day}/{server_time.month}/{server_time.year}"
 
-        if self.user.is_sys_admin:
+        if self.user.name[0:5]=="guest":
+            user_info_lbl = Label(frame,text=f"Guest Mode, Date: {date_str}",bg="#6699ff",font=("Arial",15))
+        elif self.user.is_sys_admin:
             user_info_lbl = Label(frame,text=f"User: {self.user.name} (admin), Rooms: {len(self.user.joined_room)}, Date: {date_str}",bg="#6699ff",font=("Arial",15))
         else:
             user_info_lbl = Label(frame,text=f"User: {self.user.name} , Rooms: {len(self.user.joined_room)}, Date: {date_str}",bg="#6699ff",font=("Arial",15))
@@ -202,7 +203,7 @@ class ui_reddit:
     def create_chatroom(self):
         toplevel = Toplevel(bg="white")
         toplevel.grab_set()
-        toplevel.geometry("450x300")
+        toplevel.geometry("450x250")
         title_frame = Frame(toplevel,bg="#6666ff")
         title_msg_lbl = Label(title_frame,bg="#6666ff",fg="white",text="Create New Room",font=("Arial",20,font.BOLD))
         title_msg_lbl.pack(padx=50)
@@ -214,18 +215,6 @@ class ui_reddit:
         chat_name_lbl.pack(side=LEFT,padx=10)
         chat_name_entry.pack(side=LEFT,padx=10)
         name_frame.pack(side=TOP,pady=10,anchor=W,padx=10)
-
-
-        msg_lbl = Label(toplevel,text="When inputting topics and banned words, make sure to sepeate them by a ','")
-
-        topics_frame = Frame(toplevel,bg="white")
-        topics_lbl = Label(topics_frame,text="Room Topics:",bg="white",font=("Arial",15))
-        topics_entry = Entry(topics_frame,width=40,highlightbackground="#0066ff", highlightthickness=2)
-        topics_msg = Label(topics_frame,text="Separate the topics with ','",font=("Arial",10),bg="white")
-        topics_lbl.grid(column=0,row=0,padx=15)
-        topics_entry.grid(column=1,row=0)
-        topics_msg.grid(column=1,row=1)
-        topics_frame.pack(side=TOP,pady=10,anchor=W)
         
         banned_frame = Frame(toplevel,bg="white")
         banned_words_lbl = Label(banned_frame,text="Banned Words:",bg="white",font=("Arial",15))
@@ -236,23 +225,23 @@ class ui_reddit:
         banned_words_msg.grid(column=1,row=1)
         banned_frame.pack(side=TOP,pady=10,anchor=W)
 
-        
-
-        create_btn = Button(toplevel,text="Create Room!",bg = "white",font=("Arial",15), command=lambda:self.mange_creating_new_room(chat_name_entry.get(),topics_entry.get(),banned_words_entry.get(),toplevel))
+        create_btn = Button(toplevel,text="Create Room!",bg = "white",font=("Arial",15), command=lambda:self.mange_creating_new_room(chat_name_entry.get(),banned_words_entry.get(),toplevel))
         create_btn.pack(anchor=W,padx=20,pady=10)
 
-    def mange_creating_new_room(self,name,topics,banned_words,toplevel):
+    def mange_creating_new_room(self,name,banned_words,toplevel):
         print(name)
         if self.user_controller.check_if_room_name_exists(name):
             messagebox.showerror(title="Room name already exists",message="Sorry but this room name is already in use")
         else:
             try:
-                topics_lst = topics.split(",")
                 banned_words_lst = banned_words.split(",")
             except:
                 messagebox.showerror(title="wrong input",message="Sorry but your input of the fields was wrong, make sure to follow the rules stated")
                 return
-            result = self.user_controller.create_new_room_with_server(self.user,name,topics_lst,banned_words_lst)
+            for word in banned_words:
+                if word == " ":
+                    messagebox.showerror(title="no spaces allowed",message="You cannot use spaces while inputting banned words, it will not regiester")
+            result = self.user_controller.create_new_room_with_server(self.user,name,banned_words_lst)
             if result:
                 toplevel.destroy()
                 self.user.joined_room.append("yo")
@@ -368,13 +357,14 @@ class ui_reddit:
         back_to_feed_btn.pack(side=BOTTOM,anchor=W,padx=10)
         packing_frame.pack(side=LEFT,anchor=N,pady=10,fill=Y)
 
-        if not self.is_user_in_list(chatroom.members ):
+        if not self.is_user_in_list(chatroom.members ) and not self.user.name[0:5]=="guest":
             join_btn = Button(canvas,bg="#6666ff",fg="white",text="Join Room!",font=("Arial",15),command=lambda: self.manage_join_room(chatroom),borderwidth=0)
             join_btn.pack(side=RIGHT,anchor=N,pady=10,padx=20)
 
-        self.add_msg_img = PhotoImage(file="program_pics\\add (1).png")
-        add_btn = Button(canvas,image=self.add_msg_img,borderwidth=0,command=lambda:self.get_new_msg_info(chatroom),bg="white")
-        add_btn.pack(side=BOTTOM,anchor=E)
+        if not self.user.name[0:5]=="guest":
+            self.add_msg_img = PhotoImage(file="program_pics\\add (1).png")
+            add_btn = Button(canvas,image=self.add_msg_img,borderwidth=0,command=lambda:self.get_new_msg_info(chatroom),bg="white")
+            add_btn.pack(side=BOTTOM,anchor=E)
 
         self.refresh_img = PhotoImage(file="program_pics\\circular-left-arrow (1).png")
         self.refresh_btn = Button(canvas,image=self.refresh_img,borderwidth=0,command=lambda:self.manage_join_room_by_id(self.current_chat_id),bg="white")      
@@ -415,7 +405,7 @@ class ui_reddit:
 
 
         packing_frame = Frame(canvas)
-        if self.user.name == "guest":
+        if self.user.name[0:5] == "guest":
             guest_actions_frame = self.guest_actions(packing_frame)
             guest_actions_frame.pack(side=TOP,anchor=W,pady=5)
         else:
@@ -492,7 +482,7 @@ class ui_reddit:
         log_in_btn = Button(button_frame,text="Log In",bg="#6666ff",fg="white",command=self.send_log_in_info,font=("Arial",15),width=30,height=1)
         msg_lbl = Label(button_frame,text="Don't have an account yet?",font=("Arial",10),bg="white")
         sign_up_btn = Button(button_frame,text="Sign Up",bg="white",fg="#6666ff",font=("Arial",10,font.BOLD),borderwidth=0,command=self.change_to_signup)
-        continue_as_a_guest_btn = Button(right_frame,text="Or continue as a guest",font=("Arial",10,font.BOLD),bg="white",fg="#6666ff",borderwidth=0)
+        continue_as_a_guest_btn = Button(right_frame,text="Or continue as a guest",font=("Arial",10,font.BOLD),bg="white",fg="#6666ff",borderwidth=0,command=self.guest_log_in)
 
         log_in_btn.pack()
         msg_lbl.pack(side=LEFT,pady=10)
@@ -551,7 +541,7 @@ class ui_reddit:
         sign_up_btn = Button(button_frame,text="Sign Up",bg="#6666ff",fg="white",command=self.send_sign_up_info,font=("Arial",15),width=30,height=1)
         msg_lbl = Label(button_frame,text="Already have an account?",font=("Arial",10),bg="white")
         log_in_btn = Button(button_frame,text="Log in",bg="white",fg="#6666ff",font=("Arial",10,font.BOLD),borderwidth=0,command=self.change_to_login)
-        continue_as_a_guest_btn = Button(right_frame,text="Or continue as a guest",font=("Arial",10,font.BOLD),bg="white",fg="#6666ff",borderwidth=0)
+        continue_as_a_guest_btn = Button(right_frame,text="Or continue as a guest",font=("Arial",10,font.BOLD),bg="white",fg="#6666ff",borderwidth=0,command=self.guest_log_in)
 
         sign_up_btn.pack()
         msg_lbl.pack(side=LEFT,pady=10)
@@ -627,7 +617,11 @@ class ui_reddit:
         else:
             self.user = user
             self.main_menu_screen()
-            
+    
+    def guest_log_in(self):
+        user = self.user_controller.guest_log_in()
+        self.user = user
+        self.main_menu_screen()
 
     def send_sign_up_info(self):
         not_allowed_lst = ['no',"name to id dict","chat id","key didn't have a value",]
@@ -730,6 +724,8 @@ class ui_reddit:
         submit_btn.pack(pady=10)       
     
     def manage_join_room_by_id(self,id_num,*top_level):
+        if self.user_controller.refresh:
+            self.user_controller.refresh = False
         try:
             tmp = int(id_num)
         except:
@@ -828,23 +824,30 @@ class ui_reddit:
         top_level = Toplevel()
         top_level.attributes('-topmost', True)
         self.filename = ""
-        title_lbl = Label(top_level,text="Enter the title of your post:")
-        title_entry = Entry(top_level)
 
-        msg_lbl = Label(top_level,text="Enter the text of your post:")
-        msg_entry = Entry(top_level,width=70)
+        title_frame = Frame(top_level)
+        title_msg = Label(title_frame,text="Create New Message!",bg="#6666ff",fg="white",font=("Arial",20,font.BOLD))
+        title_msg.pack(fill=X)
+        title_frame.pack(fill=X)
+
+        msg_frame = Frame(top_level,bg="white")
+        title_lbl = Label(msg_frame,text="Enter the title of your post:",bg="white",font=("Arial",15))
+        title_entry = Entry(msg_frame,highlightbackground="#0066ff", highlightthickness=2)
+
+        msg_lbl = Label(msg_frame,text="Enter the text of your post:",bg="white",font=("Arial",15))
+        msg_entry = Entry(msg_frame,width=70,highlightbackground="#0066ff", highlightthickness=2)
         print("yoyo?")
-        add_img_btn = Button(top_level,text="Add Image",command=self.select_img_for_message)
+        add_img_btn = Button(msg_frame,text="Add Image",command=self.select_img_for_message,bg="white",font=("Arial",15))
 
-        create_btn = Button(top_level,text="Create!",command=lambda :self.check_new_msg_fields(self.user.name,msg_entry.get(),
-        chat_room,self.filename,title_entry.get(),top_level))
-
-        title_lbl.grid(row=0,column=0,pady=10)
-        title_entry.grid(row=0,column=1,pady=10)
-        msg_lbl.grid(row=1,column=0,pady=10)
-        msg_entry.grid(row=1,column=1,pady=10)
-        create_btn.grid(row=2,column=0,pady=10)
-        add_img_btn.grid(row=2,column=1,pady=10)
+        create_btn = Button(msg_frame,text="Create!",bg="white",font=("Arial",15),command=lambda :self.check_new_msg_fields(self.user.name,msg_entry.get(),
+                chat_room,self.filename,title_entry.get(),top_level))
+        msg_frame.pack()
+        title_lbl.grid(row=0,column=0,pady=10,padx=5)
+        title_entry.grid(row=0,column=1,pady=10,padx=5)
+        msg_lbl.grid(row=1,column=0,pady=15,padx=5)
+        msg_entry.grid(row=1,column=1,pady=15,padx=5)
+        create_btn.grid(row=2,column=0,pady=10,padx=5)
+        add_img_btn.grid(row=2,column=1,pady=10,padx=5)
 
 
     def select_img_for_message(self):
@@ -869,8 +872,9 @@ class ui_reddit:
         if len(title) > 60:
             messagebox.showerror(title="title is too long",message="the title is not allowed to be over 60 chars")
             return
-        
-        words = msg.split(" ")
+        tmpmsg = msg.replace(".","")
+        tmpmsg = tmpmsg.replace(",","") 
+        words = tmpmsg.split(" ")
         for word in words:
             if word in chat_room.banned_words:
                 messagebox.showerror(title = "bad message" ,message = "Your message contains a banned word and is not allowed to apper in this chat room")

@@ -105,7 +105,7 @@ class user_controller:
         self.in_process = False
         return is_ok
     
-    def log_in(self,name:str,password:str) ->bool:
+    def log_in(self,name:str,password:str):
         self.in_process = True
         msgs = ['log in',[name,password]]
         for msg in msgs:
@@ -123,6 +123,15 @@ class user_controller:
         self.in_process = False
         return msg,msg_waiting
     
+    def guest_log_in(self):
+        self.in_process = True
+        self.sock.send(pickle.dumps("guest log in"))
+        guest_number = self.get_current_waiting_msg()
+        name = "guest" + str(guest_number)
+        self.sock.send(pickle.dumps(self.udp_porrt))
+        user = User(name,"",False)
+        return user
+
     def change_password(self,user:User,new_pass:str):
         self.sock.send(pickle.dumps(f"change password password:<{new_pass}> name:<{user.name}>"))
         result = self.get_current_waiting_msg()
@@ -138,10 +147,10 @@ class user_controller:
         result = self.get_current_waiting_msg()
         return result
 
-    def create_new_room_with_server(self,creator:User,name:str,topics,banned_words) -> bool:
+    def create_new_room_with_server(self,creator:User,name:str,banned_words) -> bool:
         self.in_process = True
         id_num = self.get_new_room_id_from_server()
-        new_chat = chatroom(creator,name,topics,id_num,banned_words)
+        new_chat = chatroom(creator,name,id_num,banned_words)
         if not self.check_if_room_name_exists(name):
             self.in_process = True
             self.sock.send(pickle.dumps("new room"))
@@ -307,8 +316,8 @@ class user_controller:
 
 
 use = User("ayal","123",False)
-chat = chatroom(use,"Omer's WonderLand",[],1,[])                    
-chat2 = chatroom(use,"Omer's WonderLand 2nd edition",[],2,[])
+chat = chatroom(use,"Omer's WonderLand",1,[])                    
+chat2 = chatroom(use,"Omer's WonderLand 2nd edition",2,[])
 msg1 = message("omer","wow this works!!",chat,"user.png","Please work")
 msg2 = message("itai","Pleeeeeeeeeeeeeeeeeeeeeeeeeaaaaaaaaaaaaaaaaaaasssssssssssssssseeeeeeeeeeeeeeeeeeeee",chat,"cat.jpg","holy fuck please")
 msg3 = message("elad","testingeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",chat,"logo.png","testing")

@@ -12,9 +12,6 @@ class User():
     def __str__(self):
         return f"name: {self.name}, password: {self.password}"
     
-    @classmethod
-    def from_ip(cls,ip_addr:str) -> 'User':
-        return cls(ip_addr,'tmp',False)
 
 
     

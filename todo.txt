@@ -6,6 +6,9 @@ To Test!! -
     - show all users in chat room
     - show all current online users
     - removal of user from lists and stuff after being ban
+    - guest user
+    - remove key words from chat room
+    - remove key words server wide
 
 after that -
 

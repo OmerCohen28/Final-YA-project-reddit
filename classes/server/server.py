@@ -35,6 +35,7 @@ class server:
         self.current_user_socket_dict = {}
         self.users_time_dict = {}
         self.name_udp_port_dict={}
+        self.guest_number = 0
         self.initialize_server_core_vars()
 
         self.rake_obj = rake_nltk.Rake('stop.txt')
@@ -266,6 +267,9 @@ class server:
                     if(msg=="log in"):
                         self.enter_line_into_log("Recevied a log-in")
                         self.check_log_in(sockobj)
+                    if(msg=="guest log in"):
+                        self.enter_line_into_log("Recevued a guest log-in")
+                        self.guest_log_in(sockobj)
                     if(msg=="need chat id"):
                         self.enter_line_into_log("Returned a new chat id for a user")
                         sockobj.send(pickle.dumps(self.curr_chat_id))
@@ -395,6 +399,14 @@ class server:
         print(f"finishing log in: {udp_port}")
         self.name_udp_port_dict[name] = udp_port
         self.give_messages_to_user(name,sock)
+    
+    def guest_log_in(self,sock:socket):
+        sock.send(pickle.dumps(self.guest_number))
+        name = "guest" + str(self.guest_number)
+        self.guest_number+=1
+        self.current_user_socket_dict[name] = sock
+        udp_port = pickle.loads(sock.recv(1054))
+        self.name_udp_port_dict[name] = udp_port
     
     def give_messages_to_user(self,name:str,sock:socket):
         try:
@@ -582,6 +594,8 @@ class server:
         print("user chat room:",self.current_user_chat_room_dict)
         print("chat name to id",self.chat_name_to_id_dict)
         for key in self.current_user_chat_room_dict:
+            if key[0:5]=="guest":
+                continue
             print(key)
             try:
                 new_dict[key] = id_to_name_dict[self.current_user_chat_room_dict[key]]
