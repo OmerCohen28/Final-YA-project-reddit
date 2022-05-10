@@ -352,16 +352,16 @@ class ui_reddit:
         canvas.bind("<Configure>",lambda event: canvas.configure(scrollregion=canvas.bbox("all")))
         canvas.bind_all("<MouseWheel>",lambda e:self.on_mousewheel(e,canvas))
         second_frame = Frame(canvas,bg="white",borderwidth=0)
-        canvas.create_window((250,0),window=second_frame,anchor=NW)
+        canvas.create_window((270,0),window=second_frame,anchor=NW)
 
         packing_frame = Frame(canvas,bg="white")
         user_stats_frame = self.user_stats(chatroom,packing_frame)
         user_stats_frame.pack(side=TOP,anchor=W,pady=5)
         #only for admin
         if self.user.is_sys_admin:
-            swap_btn = Button(packing_frame,text="Swap View",command=lambda:self.admin_change_between_users_and_messages_in_a_room(chatroom,second_frame))
+            swap_btn = Button(packing_frame,text="Swap View",bg="white",command=lambda:self.admin_change_between_users_and_messages_in_a_room(chatroom,second_frame),font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
             swap_btn.pack(side=TOP,anchor=W,pady=5,padx=10)
-            show_key_words_btn = Button(packing_frame,text="Show keywords for this room",command=lambda:self.show_keywords_for_a_room(chatroom))
+            show_key_words_btn = Button(packing_frame,text="Show keywords for this room",bg="white",command=lambda:self.show_keywords_for_a_room(chatroom),font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
             show_key_words_btn.pack(side=TOP,anchor=W,padx=10,pady=5)
 
         back_to_feed_btn = Button(packing_frame,text="<< Back To Feed",bg="#6666ff",fg="white",font=("Arial",15),command=self.main_menu_screen)
@@ -415,8 +415,12 @@ class ui_reddit:
 
 
         packing_frame = Frame(canvas)
-        user_actions_frame = self.user_actions(packing_frame)
-        user_actions_frame.pack(side=TOP,anchor=W,pady=5)
+        if self.user.name == "guest":
+            guest_actions_frame = self.guest_actions(packing_frame)
+            guest_actions_frame.pack(side=TOP,anchor=W,pady=5)
+        else:
+            user_actions_frame = self.user_actions(packing_frame)
+            user_actions_frame.pack(side=TOP,anchor=W,pady=5)
         packing_frame.pack(side=LEFT,anchor=N,pady=10,padx=10)
 
         if self.user.is_sys_admin:
@@ -580,6 +584,8 @@ class ui_reddit:
         second_frame = Frame(canvas)
         canvas.create_window((225,0),window=second_frame,anchor=NW)
 
+        msg_lbl = Label(canvas,text="Search Results",font=("Arial",20,font.BOLD))
+        msg_lbl.pack(side=TOP)
 
         result_dict = self.user_controller.send_and_recv_search_results(keyword)
         print(f"results dict {result_dict}")
@@ -665,19 +671,30 @@ class ui_reddit:
         change_password_btn.pack(side=TOP,pady=10)
         return frame
     
+    def guest_actions(self,container_frame:Frame):
+        frame = Frame(container_frame)
+        msg_lbl = Label(frame,text="Guest Options:",font=("Arial",15,font.BOLD))
+        join_room_by_id_btn = Button(frame,text="Join room by ID",command=self.join_room_by_id_window,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
+        join_room_by_name_btn = Button(frame,text="Join room by name",command=self.join_room_by_name_window,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
+
+        msg_lbl.pack(side=TOP)
+        join_room_by_id_btn.pack(side=TOP,pady=10)
+        join_room_by_name_btn.pack(side=TOP,pady=10)
+        return frame        
+    
     def admin_actions(self,container_frame:Frame):
         frame = Frame(container_frame)
         msg_lbl = Label(frame,text="Admin Options:",font=("Arial",15,font.BOLD))
         show_all_rooms_btn = Button(frame,text="Show all rooms",command=self.show_all_rooms_for_admin,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
         show_current_users_btn = Button(frame,text="Show all current online users",command=self.show_all_current_users_for_admin,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
         change_date_btn = Button(frame,text="Modify the date of the app",command=self.show_calendar,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
-        change_app_settings_btn = Button(frame,text="Change the app settings",command=self.Do,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
+        ban_key_words_btn = Button(frame,text="Ban key words",command=self.window_to_ban_a_word_server_wide,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
 
         msg_lbl.pack(side=TOP)
         show_all_rooms_btn.pack(side=TOP,pady=10)
         show_current_users_btn.pack(side=TOP,pady=10)
         change_date_btn.pack(side=TOP,pady=10)
-        change_app_settings_btn.pack(side=TOP,pady=10)
+        ban_key_words_btn.pack(side=TOP,pady=10)
         return frame
 
 
@@ -718,6 +735,10 @@ class ui_reddit:
         except:
             messagebox.showerror(title = "wrong ID",message="ID has to be a postibe number")
             return
+
+        for char in str(id_num):
+            if char == " ":
+                messagebox.showerror(title="space in id",message="Spaces are not allowed in this field")
 
         chat_room = self.user_controller.get_room_by_id(id_num,self.user.name)
 
@@ -895,15 +916,17 @@ class ui_reddit:
 
             frame = Frame(container_frame,bg = color,highlightbackground="#0066ff", highlightthickness=2,width=300)
             
-            room_btn = Button(frame,text=f"Room/{chat_room.name}",font=("Arial",15),bg=color,command=partial(self.manage_join_room_by_id,chat_room.room_id))
-            members_joined_lbl = Label(frame,text = f"{len(chat_room.members)} members",font=("Arial",15),bg=color)
-            score_lbl = Label(frame,text=f"{score}% match",font=("Arial",15),bg=color)
-            go_to_room_btn = Button(frame,text="go to room",font=("Arial",15),bg=color,command=partial(self.manage_join_room_by_id,chat_room.room_id))
+            room_btn = Button(frame,text=f"Room/{chat_room.name}",font=("Arial",20),bg=color,command=partial(self.manage_join_room_by_id,chat_room.room_id))
+            members_joined_lbl = Label(frame,text = f"{len(chat_room.members)} members",font=("Arial",20),bg=color)
+            score_lbl = Label(frame,text=f"{score}% match",font=("Arial",20),bg=color)
+            go_to_room_btn = Button(frame,text="go to room",font=("Arial",20),bg=color,command=partial(self.manage_join_room_by_id,chat_room.room_id))
+            space_lbl = Label(frame,text="",width=100,bg=color)
 
-            room_btn.grid(row=0,column=0,pady=10,padx=20)
-            members_joined_lbl.grid(row=1,column=0,pady=10)
-            score_lbl.grid(row=0,column=1,pady=10,padx=20)
-            go_to_room_btn.grid(row=2,column=1,pady=10,padx=20)
+            space_lbl.pack()
+            room_btn.pack(side=TOP,anchor=W,padx=10,pady=10)
+            score_lbl.pack(side=TOP,anchor=W,padx=10,pady=10)
+            members_joined_lbl.pack(side=TOP,anchor=W,padx=10,pady=10)
+            go_to_room_btn.pack(side=TOP,anchor=E,padx=10,pady=10)
             count+=1
 
             result.append(frame)
@@ -925,10 +948,10 @@ class ui_reddit:
         second_frame = Frame(canvas,bg="white")
         canvas.create_window((200,0),window=second_frame,anchor=NW)
 
-        msg_lbl = Label(canvas,text=f"All rooms sorted by {self.key}",font=("Arial",15,font.BOLD))
+        msg_lbl = Label(canvas,text=f"All rooms sorted by {self.key}",font=("Arial",15,font.BOLD),bg="white")
         msg_lbl.pack()
 
-        swap_btn = Button(canvas,text="Swap between members/date",font=("Arial",15),command=self.swap_view_for_room_key)
+        swap_btn = Button(canvas,text="Swap between members/date",borderwidth=0,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),command=self.swap_view_for_room_key,bg="white")
         swap_btn.pack(side=RIGHT,anchor=N,padx=10,pady=10)
 
         room_frame_lst = self.make_sorted_room_lst(second_frame)
@@ -965,14 +988,14 @@ class ui_reddit:
             
             frame = Frame(container_frame,bg=color,highlightbackground="#0066FF",highlightthickness=2,width=300)
 
-            name_btn = Button(frame,text=f"Room/{chat_room_info[0]}",font=("Arial",15,font.BOLD),command=partial(self.manage_join_room_by_id,chat_room_info[1]))
-            created_by_lbl = Label(frame,text=f"Created by: {chat_room_info[5]}",font=("Arial",13))
-            created_on_lbl = Label(frame,text=f"Room active since {chat_room_info[2].day}/{chat_room_info[2].month}/{chat_room_info[2].year}",font=("Arial",13))
-            msgs_sent_lbl = Label(frame,text=f"{chat_room_info[3]} messages sent so far",font=("Arial",13))
-            members_lbl = Label(frame,text=f"{chat_room_info[4]} members joined so far",font=("Arial",13))
-            go_to_room_btn = Button(frame,text="Go to room",font=("Arial",13),command=partial(self.manage_join_room_by_id,chat_room_info[1]))
+            name_btn = Button(frame,text=f"Room/{chat_room_info[0]}",font=("Arial",15,font.BOLD),command=partial(self.manage_join_room_by_id,chat_room_info[1]),bg=color)
+            created_by_lbl = Label(frame,text=f"Created by: {chat_room_info[5]}",font=("Arial",13),bg=color)
+            created_on_lbl = Label(frame,text=f"Room active since {chat_room_info[2].day}/{chat_room_info[2].month}/{chat_room_info[2].year}",font=("Arial",13),bg=color)
+            msgs_sent_lbl = Label(frame,text=f"{chat_room_info[3]} messages sent so far",font=("Arial",13),bg=color)
+            members_lbl = Label(frame,text=f"{chat_room_info[4]} members joined so far",font=("Arial",13),bg=color)
+            go_to_room_btn = Button(frame,text="Go to room",borderwidth=0,font=("Arial",13,font.ITALIC,font.BOLD,"underline"),command=partial(self.manage_join_room_by_id,chat_room_info[1]),bg=color)
 
-            space_lbl = Label(frame,text="",width=100)
+            space_lbl = Label(frame,text="",width=100,bg=color)
             space_lbl.pack()
             name_btn.pack(side=TOP,anchor=W,padx=10,pady=10)
             created_by_lbl.pack(side=TOP,anchor=W,padx=10,pady=10)
@@ -1027,10 +1050,10 @@ class ui_reddit:
             
             frame = Frame(container_frame,bg=color,highlightbackground="#0066FF",highlightthickness=2,width=300)
 
-            name_lbl = Label(frame,text=f"User/{user_info[0]}",font=("Arial",15))
-            time_lbl = Label(frame,text=user_info[1],font=("Arial",15))
-            room_lbl = Label(frame,text=user_info[2],font=("Arial",15))
-            space_lbl = Label(frame,text="",width=100)
+            name_lbl = Label(frame,text=f"User/{user_info[0]}",font=("Arial",15),bg=color)
+            time_lbl = Label(frame,text=user_info[1],font=("Arial",15),bg=color)
+            room_lbl = Label(frame,text=user_info[2],font=("Arial",15),bg=color)
+            space_lbl = Label(frame,text="",width=100,bg=color)
 
             space_lbl.pack()
             name_lbl.pack(side=TOP,anchor=W,pady=10,padx=10)
@@ -1038,6 +1061,8 @@ class ui_reddit:
             room_lbl.pack(side=TOP,anchor=W,pady=10,padx=10)
 
             result.append(frame)
+
+            count+=1
            
         return result
     
@@ -1066,12 +1091,12 @@ class ui_reddit:
             
             frame = Frame(container_frame,bg=color,highlightbackground="#0066FF",highlightthickness=2,width=300)
 
-            name_lbl = Label(frame,text=f"Name: {user.name}",font=("Arial",15))
+            name_lbl = Label(frame,text=f"Name: {user.name}",bg=color,font=("Arial",15))
             msgs_sent = self.how_many_messages_a_user_sent_in_a_chat_room(chatroom,user)
-            msgs_sent_lbl = Label(frame,text=f"Messages sent: {msgs_sent}",font=("Arial",15))
+            msgs_sent_lbl = Label(frame,text=f"Messages sent: {msgs_sent}",bg=color,font=("Arial",15))
 
-            warn_btn = Button(frame,text="Warn User",command=partial(self.send_waiting_msg,"warn",user.name),borderwidth=0,font=("Arial",15))
-            ban_btn = Button(frame,text="Ban User",command=partial(self.send_waiting_msg,"ban",user.name),borderwidth=0,font=("Arial",15))
+            warn_btn = Button(frame,text="Warn User",bg=color,command=partial(self.send_waiting_msg,"warn",user.name),borderwidth=0,font=("Arial",13,font.ITALIC,font.BOLD,"underline"))
+            ban_btn = Button(frame,text="Ban User",bg=color,command=partial(self.send_waiting_msg,"ban",user.name),borderwidth=0,font=("Arial",13,font.ITALIC,font.BOLD,"underline"))
 
             space_lbl = Label(frame,text="",bg=color,width=100)
             space_lbl.pack()
@@ -1086,6 +1111,11 @@ class ui_reddit:
 
 
     def send_waiting_msg(self,msg:str,name:str):
+
+        if name == self.user.name:
+            messagebox.showerror(title="wrong person",message="You can not set a message for yourself")
+            return
+
         result = self.admin_controller.set_a_message_for_user(msg,name)
 
         if result == "eror":
@@ -1117,18 +1147,16 @@ class ui_reddit:
         submit_btn.pack(pady=10)
     
     def ask_user_if_wants_to_proceed(self,date,cal):
-        top_level = Toplevel(self.root)
+        top_level = Toplevel(self.root,bg="white")
 
-        msg_lbl = Label(top_level,text="The action you are going to take will kick all the users currently online, would you like to still do it?")
-        msg_lbl.grid(column=1,row=0,pady=10,padx=10)
+        msg_lbl = Label(top_level,text="Kick all users to complete action?",bg="#6666ff",fg="white",font=("Arial",15,font.BOLD))
+        msg_lbl.pack(side=TOP,pady=10,fill=X)
 
-        yes_btn = Button(top_level,text="Yes!",command=lambda:self.send_date_modification_to_server(date,cal,top_level))
-        yes_btn.grid(column=0,row=1,pady=10,padx=10)
+        yes_btn = Button(top_level,text="Yes!",command=lambda:self.send_date_modification_to_server(date,cal,top_level),bg="white",font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
+        yes_btn.pack(side=LEFT,padx=10,pady=10)
 
-        no_btn = Button(top_level,text="No!",command=lambda:top_level.destroy())
-        no_btn.grid(column=1,row=1,pady=10,padx=10)
-
-
+        no_btn = Button(top_level,text="No!",command=lambda:top_level.destroy(),bg="white",font=("Arial",13,font.ITALIC,font.BOLD,"underline"),borderwidth=0)
+        no_btn.pack(side=RIGHT,padx=10,pady=10)
 
     def send_date_modification_to_server(self,new_date:datetime.date,top_level:Toplevel,parent:Toplevel):
         parent.destroy()
@@ -1155,13 +1183,39 @@ class ui_reddit:
         for key in word_score_dict.keys():
             frame = Frame(top_level)
             word_lbl = Label(frame,text=f"word: {key}, score: {word_score_dict[key]}",font=("Arial",13))
-            remove_btn = Button(frame,text="Remove word",command=self.Do,font=("Arial",13))
+            remove_btn = Button(frame,text="Remove word",command=partial(self.manage_remove_key_word_for_room,key,chat_room,top_level),font=("Arial",13))
             word_lbl.pack(side=LEFT,padx=10,pady=10)
             remove_btn.pack(side=LEFT,padx=10,pady=10)
             frame_lst.append(frame)
 
         for frame in frame_lst:
             frame.pack()
+        
+    def manage_remove_key_word_for_room(self,word:str,chat_room:chatroom,top_level:Toplevel):
+        self.admin_controller.remove_word_for_chat_room(word,chat_room.name)
+        top_level.destroy()
+        self.show_keywords_for_a_room(chat_room)
+    
+    def window_to_ban_a_word_server_wide(self):
+        top_level = Toplevel(bg="white")
+        msg_lbl = Label(top_level,text="Enter a keyword you would like to ban",bg="#6666ff",fg="white",font=("Arial",20,font.BOLD))
+        word_entry = Entry(top_level,highlightbackground="#0066ff",highlightthickness=2,width=50)
+        submit_btn = Button(top_level,text="Submit!",command=lambda:self.manage_ban_key_word_server_wide(word_entry.get(),top_level),bg="white",font=("Arial",15))
+        msg_lbl.pack(fill=X)
+        word_entry.pack(pady=10)
+        submit_btn.pack(pady=10)
+    
+    def manage_ban_key_word_server_wide(self,word:str,top_level:Toplevel):
+        for char in word:
+            if char==" ":
+                messagebox.showerror(title="space in keyword",message="Spaces are not allowed when banning a key word")
+                return
+        if word == "":
+            messagebox.showerror(title="key word left empty",message="You can not leave the key word field empty")
+            return
+
+        self.admin_controller.remove_key_word_server_wide(word)
+        top_level.destroy()
 
 try:
     rot = Tk()

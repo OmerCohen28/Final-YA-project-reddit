@@ -82,6 +82,15 @@ class db:
 
     def set_banned_users(self,lst):
         self.r.set("banned list",pickle.dumps(lst))
+    
+    def get_banned_words_lst(self)->list[str]:
+        try:
+            return pickle.loads(self.r.get("banned words list"))
+        except:
+            return None
+    
+    def set_banned_words_lst(self,lst):
+        self.r.set("banned words list",pickle.dumps(lst))
         
 
 

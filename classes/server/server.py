@@ -23,7 +23,7 @@ class server:
         warnings.filterwarnings("ignore",category=DeprecationWarning)
         #self.conn_sock = ssl.wrap_socket(socket(AF_INET,SOCK_STREAM), server_side=True,certfile="cert.pem",keyfile="key.pem")
         self.conn_sock = socket(AF_INET,SOCK_STREAM)
-        self.conn_sock.bind(("192.168.0.111",50000))
+        self.conn_sock.bind(("10.100.102.3",50000))
         self.conn_sock.listen(5)
         self.conn_sock.setsockopt(SOL_SOCKET,SO_REUSEADDR, True)
 
@@ -41,7 +41,7 @@ class server:
 
         self.udp_sock = socket(AF_INET,SOCK_DGRAM)
         self.udp_sock.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
-        self.udp_sock.bind(("192.168.0.111",0))
+        self.udp_sock.bind(("10.100.102.3",0))
 
     '''
     core functions that the server uses
@@ -86,6 +86,11 @@ class server:
         if self.banned_users is None:
             self.banned_users = []
             self.db_conn.set_banned_users([])
+        
+        self.banned_words_lst = self.db_conn.get_banned_words_lst()
+        if self.banned_words_lst is None:
+            self.banned_words_lst = []
+            self.db_conn.set_banned_words_lst([])
     
     def enter_line_into_log(self,msg:str):
         with open('log.txt','a') as file:
@@ -112,6 +117,10 @@ class server:
     def remove_unwanted_words_from_chat_room(self,text:str,chat_room:chatroom)->str:
         for removed_word in chat_room.removed_common_words:
             text = text.replace(removed_word,".")
+        
+        for removed_server_wide in self.banned_words_lst:
+            text = text.replace(removed_server_wide,".")
+
         return text
     def get_word_score_dict_for_chat_room(self,id_num) ->dict:
         id_text_dict = self.get_all_words_from_chats()
@@ -331,6 +340,10 @@ class server:
                         sockobj.send(pickle.dumps(chat_room.common_words))
                         time.sleep(0.5)
                         sockobj.send("stop".encode())
+                    if(msg[0:25]=="remove key word chat room"):
+                        self.add_removed_key_word_to_chat_room_lst(sockobj,msg)
+                    if(msg[0:23]=="remove word server wide"):
+                        self.remove_key_word_server_wide(sockobj,msg)
 
 
 
@@ -699,7 +712,40 @@ class server:
                 room
             ]
             sock.send(pickle.dumps(lst))
-            msg = sock.recv(1054)        
+            msg = sock.recv(1054)     
+
+    def add_removed_key_word_to_chat_room_lst(self,sock:socket,info:str):
+        name_pattern  = re.compile(r"name:<(.+?)>")
+        word_pattern = re.compile(r"word:<(.+?)>")
+        name  = re.findall(string=info,pattern=name_pattern)[0]
+        word = re.findall(string=info,pattern=word_pattern)[0]
+
+        chat_name_to_id_dict = self.get_name_to_id_chat_room_name_dict()
+
+        id_num = chat_name_to_id_dict[name]
+        chat_room = self.db_conn.get_chat(id_num)
+
+        chat_room.removed_common_words.append(word)
+        self.db_conn.insert_chat(id_num,chat_room)
+
+        chat_room.common_words = self.get_word_score_dict_for_chat_room(chat_room.room_id)
+        self.db_conn.insert_chat(id_num,chat_room)
+
+        sock.send(pickle.dumps("ok"))
+    
+    def remove_key_word_server_wide(self,sock:socket,info:str):
+        word_pattern = re.compile(r"word:<(.+?)>")
+        word = re.findall(string=info,pattern=word_pattern)[0]
+        self.banned_words_lst.append(word)
+        self.db_conn.set_banned_words_lst(self.banned_words_lst)
+        sock.send(pickle.dumps("ok"))
+
+        for id_num in range(self.curr_chat_id):
+            chat_room = self.db_conn.get_chat(id_num)
+            if isinstance(chat_room,str):
+                continue
+            chat_room.common_words = self.get_word_score_dict_for_chat_room(id_num)
+            self.db_conn.insert_chat(id_num,chat_room)
 
     
 

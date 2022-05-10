@@ -11,7 +11,7 @@ from os.path import exists
 from select import select
 class user_controller:
     def __init__(self):
-        self.ip_addr = "192.168.0.111"
+        self.ip_addr = "10.100.102.3"
         warnings.filterwarnings("ignore",category=DeprecationWarning)
         #self.sock = ssl.wrap_socket(socket(AF_INET,SOCK_STREAM),server_side=False)
         self.sock = socket(AF_INET,SOCK_STREAM)

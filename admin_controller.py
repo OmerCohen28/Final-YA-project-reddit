@@ -67,6 +67,9 @@ class admin_controller():
         result = self.user_controller.get_current_waiting_msg()
         return result
     
+    def remove_word_for_chat_room(self,word:str,name:str):
+        self.user_controller.sock.send(pickle.dumps(f"remove key word chat room word:<{word}> name:<{name}>"))
+        msg = self.user_controller.get_current_waiting_msg()
     #the list retunred will contain lists of all chat_rooms data which is - 
     '''
     index 0 - name
@@ -113,4 +116,8 @@ class admin_controller():
         self.user_controller.sock.send(pickle.dumps(f"get common words for id:<{id_num}>"))
         word_score_dict = self.user_controller.get_large_data()
         return word_score_dict
+    
+    def remove_key_word_server_wide(self,word:str):
+        self.user_controller.sock.send(pickle.dumps(f"remove word server wide word:<{word}>"))
+        msg = self.user_controller.get_current_waiting_msg()
 

@@ -59,6 +59,11 @@ rake = rake_nltk.Rake("stop.txt")
 s ="omer is the best omer omer best"
 rake.extract_keywords_from_text(s)
 
-user = pickle.loads(r.get("omer"))
+'''user = pickle.loads(r.get("omer"))
 user.is_sys_admin = True
-r.set("omer",pickle.dumps(user))
+r.set("omer",pickle.dumps(user))'''
+
+print(len("remove word server wide"))
+s = "remove word server wide das dasdas dsa"
+if s[0:23] == "remove word server wide dasdas":
+    print("woho")
