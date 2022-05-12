@@ -1,17 +1,7 @@
 To Test!! - 
-    - after logging out as a user, check if server allows you to log back in (assume no crash and normal exit)
-    - show all keywords for rooms, check wether key words are being added and showed 
     - live messages and notif for users
-    - time change
-    - show all users in chat room
-    - show all current online users
-    - removal of user from lists and stuff after being ban
-    - guest user
-    - remove key words from chat room
-    - remove key words server wide
 
 after that -
-
         remove the option for users to choose their own topics for their chatroom
 
 

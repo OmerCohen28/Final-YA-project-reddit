@@ -1,5 +1,4 @@
 import datetime
-from itertools import count
 from socket import *
 import ssl
 import warnings

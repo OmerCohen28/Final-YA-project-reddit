@@ -1,5 +1,4 @@
 from socket import *
-from turtle import update
 from classes.chatroom.chatroom import chatroom
 from user_controller import user_controller
 import pickle

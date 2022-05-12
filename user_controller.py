@@ -5,7 +5,6 @@ import pickle
 from classes.user.user import User
 from classes.chatroom.chatroom import chatroom
 from classes.message.message import message
-import random
 import time
 from os.path import exists
 from select import select
