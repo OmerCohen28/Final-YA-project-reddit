@@ -1433,3 +1433,35 @@ Retuned a search result at 2022-05-19 11:37:10.011209
 Retuned a search result at 2022-05-19 11:37:20.550392
 guest0 left at 2022-05-19 11:37:26.280817
 omer left at 2022-05-19 11:37:27.720091
+Recevied new user at 2022-05-13 17:34:22.215098
+Recevied a log-in at 2022-05-13 17:34:23.734326
+ left at 2022-05-13 17:34:29.110994
+Recevied a log-in at 2022-05-13 17:36:18.169690
+ left at 2022-05-13 17:36:22.536328
+Recevied a log-in at 2022-05-13 17:36:31.042760
+Recevied new user at 2022-05-13 17:38:11.044648
+Recevied a log-in at 2022-05-13 17:38:15.252730
+Returned a room by it's ID at 2022-05-13 17:43:04.014070
+Returned a room by it's ID at 2022-05-13 17:43:08.694344
+Returned a room by it's ID at 2022-05-13 17:43:21.212965
+Added a user to a chatroom at 2022-05-13 17:44:31.350633
+Returned a room by it's ID at 2022-05-13 17:44:32.285216
+Returned a room by it's ID at 2022-05-13 17:45:35.184262
+Recevued a guest log-in at 2022-05-13 17:46:28.624728
+Returned a room by it's ID at 2022-05-13 17:46:31.277897
+Returned a room by it's ID at 2022-05-13 17:49:21.158104
+Returned a room by it's ID at 2022-05-13 17:50:59.577254
+omer left at 2022-05-13 17:52:05.911349
+Recevied a log-in at 2022-05-13 17:52:19.860675
+omer left at 2022-05-13 17:53:33.722242
+Recevied a log-in at 2022-05-13 17:53:41.786109
+Returned a room by it's ID at 2022-05-13 17:55:08.776897
+Retuned a search result at 2022-05-13 17:58:06.062672
+Returned a room by it's ID at 2022-05-13 17:59:09.081397
+user left at 2022-05-13 17:59:11.813639
+omer left at 2022-05-13 18:03:39.880065
+Recevied a log-in at 2022-05-13 18:04:31.473504
+Recevied a log-in at 2022-05-13 18:04:41.030794
+Retuned a search result at 2022-05-13 18:40:18.506910
+Returned a room by it's ID at 2022-05-13 18:40:21.489462
+Returned a room by it's ID at 2022-05-13 18:40:27.178490
